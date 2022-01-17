@@ -81,6 +81,8 @@ source('./R/gen_pred_interval_inla.R')
 source('./R/popsize_formatting.R')
 source('./R/setup_CDC data_multilevel.R')
 source('./R/inla_model1.R')
+source('./R/plot_fun_ts.R')
+source('./R/summarize_functions.R')
 ```
 
 Popsize for the CDC data
@@ -195,8 +197,10 @@ mod.comp.cdc <- pblapply( test.tau, function(x) inla_model1(ds=ag3, prec.prior1=
 
 waic.va <- cbind.data.frame('test.tau'=test.tau, 'waic'=sapply(mod.comp.va, '[[','waic'))
 dic.va <- cbind.data.frame('test.tau'=test.tau, 'dic'=sapply(mod.comp.va, '[[','dic'))
+dic.cdc <- cbind.data.frame('test.tau'=test.tau, 'dic'=sapply(mod.comp.cdc, '[[','dic'))
 
 plot(dic.va$test.tau, dic.va$dic-min(dic.va$dic), type='l')
+points(dic.cdc$test.tau, dic.cdc$dic-min(dic.cdc$dic), type='l', col='red')
 abline(h=2)
 
 ```
@@ -208,65 +212,85 @@ Fit to VA and CDC data separately
 
 combine.data <- list('cdc'=ag3, 'va'=v1)
 
-mod1 <- pblapply(combine.data, inla_model1)
+mod1 <- pblapply(combine.data, inla_model1,prec.prior1=0.5)
 
 
 res1 <- bind_rows(mod1$cdc$preds_covars.m, mod1$va$preds_covars.m) #add VA data too
 
 ```
 
-We can then take the results from the INLA and aggregate over different groups. For example, by age:
+We can then take the results from the INLA and aggregate over different groups. For example, by age, by age/race, by age/region, by age/race/region:
 ```{r}
-
-
 preds.age <- res1 %>%
   group_by(source,agec, date, variable) %>%
-  summarise( 'N_deaths'=sum(N_deaths), 'pred'=sum(value) ) %>%
+  summarize_grps_sums %>%
   ungroup() %>%
   group_by(source,agec, date) %>%
-  summarise( 'N_deaths'=mean(N_deaths), 'pred_median'=median(pred), pred_lcl=quantile(pred,probs=0.025), pred_ucl=quantile(pred,probs=0.975) )
+  summarize_grps_quantiles
+
+preds.age_race <- res1 %>%
+  group_by(source,agec, race_recode, date, variable) %>%
+  summarize_grps_sums %>%
+  ungroup() %>%
+  group_by(source,agec,race_recode, date) %>%
+  summarize_grps_quantiles
+
+preds.age.region <- res1 %>%
+  group_by(source,agec,region, date, variable) %>%
+  summarize_grps_sums %>%
+  ungroup() %>%
+  group_by(source,agec,region, date) %>%
+  summarize_grps_quantiles
+
+preds.age.race.region <- res1 %>%
+  group_by(source,agec,region,race_recode, date, variable) %>%
+  summarize_grps_sums %>%
+  ungroup() %>%
+  group_by(source,agec,region,race_recode, date) %>%
+  summarize_grps_quantiles
+```
+
+
+```{r}
+ obs_exp_plot <- function(ds, xvar, yvar, groupvar, colvar){
+   ds %>%
+     mutate('agec'=as.factor(agec)) %>%
+   ggplot(aes_string(x=xvar, y=yvar , group=groupvar, col=colvar)) +
+    geom_line() +
+     geom_point()+
+    geom_line(aes(x=date, y=pred_median, group=agec), lty=2, col='black') +
+    geom_ribbon(aes(ymin=pred_lcl, ymax=pred_ucl), alpha=0.2, col='gray') +
+    ylab("Number of all-cause deaths") +
+    xlab("Date") +
+    theme_classic() +
+    theme(panel.spacing= unit(2,'lines') , axis.text.x=element_text(angle=90)) +
+    geom_hline(yintercept=0, col='gray', lty=2) +
+    geom_vline(xintercept=as.Date('2020-03-01'), col='gray', lty=2) +
+    xlim(as.Date('2014-01-01'), as.Date('2020-12-31')) +
+    theme(panel.spacing= unit(2,'lines') , axis.text.x=element_text(angle=90)) 
+}
 ```
 
 ```{r, fig.width=8, fig.height=6}
- p1 <- ggplot(preds.age[preds.age$source=='va',], aes(x=date, y=N_deaths , group=agec, col=agec)) +
-    geom_line() +
-    geom_line(aes(x=date, y=pred_median, group=agec), lty=2, col='black') +
-    geom_ribbon(aes(ymin=pred_lcl, ymax=pred_ucl), alpha=0.2, col='gray') +
-    ylab("Number of all-cause deaths") +
-    xlab("Date") +
-    theme_classic() +
-    theme(panel.spacing= unit(2,'lines') , axis.text.x=element_text(angle=90)) +
-    geom_hline(yintercept=0, col='gray', lty=2) +
-    geom_vline(xintercept=as.Date('2020-03-01'), col='gray', lty=2) +
-        facet_wrap(~agec , scales='free') +
-    xlim(as.Date('2014-01-01'), as.Date('2020-12-31')) +
-    theme(panel.spacing= unit(2,'lines') , axis.text.x=element_text(angle=90)) 
-p1
+p1 <- obs_exp_plot(ds=preds.age[preds.age$source=='cdc',], xvar='date',yvar='N_deaths', groupvar='agec', colvar='agec')
+p1 + facet_wrap(~agec, scales='free')
+
 ```
 
 or by age and race
-```{r}
-preds.age.race <- res1 %>%
-  group_by(source,agec,race_recode, date, variable) %>%
-  summarise( 'N_deaths'=sum(N_deaths), 'pred'=sum(value) ) %>%
-  ungroup() %>%
-  group_by(source,agec, race_recode,date) %>%
-  summarise( 'N_deaths'=mean(N_deaths), 'pred_median'=median(pred), pred_lcl=quantile(pred,probs=0.025), pred_ucl=quantile(pred,probs=0.975) )
+
+```{r, fig.width=8, fig.height=6}
+
+p1 <- obs_exp_plot(ds=preds.age_race[preds.age_race$source=='va',], xvar='date',yvar='N_deaths', groupvar='agec', colvar='agec')
+
+p1 + facet_grid(agec~race_recode, scales='free')
+
 ```
 
-```{r}
- p1 <- ggplot(preds.age.race[preds.age.race$agec=='65-74 years' & preds.age.race$source=='cdc',], aes(x=date, y=N_deaths )) +
-    geom_line() +
-    geom_line(aes(x=date, y=pred_median, group=agec), lty=2, col='black') +
-    geom_ribbon(aes(ymin=pred_lcl, ymax=pred_ucl), alpha=0.2, col='gray') +
-    ylab("Number of all-cause deaths") +
-    xlab("Date") +
-    theme_classic() +
-    theme(panel.spacing= unit(2,'lines') , axis.text.x=element_text(angle=90)) +
-    geom_hline(yintercept=0, col='gray', lty=2) +
-    geom_vline(xintercept=as.Date('2020-03-01'), col='gray', lty=2) +
-        facet_wrap(~race_recode , scales='free') +
-    xlim(as.Date('2014-01-01'), as.Date('2020-12-31')) +
-    theme(panel.spacing= unit(2,'lines') , axis.text.x=element_text(angle=90)) 
-p1
+
+Age and region 
+```{r, fig.width=8, fig.height=6}
+p1 <- obs_exp_plot(ds=preds.age.region[preds.age.region$source=='cdc',], xvar='date',yvar='N_deaths', groupvar='agec', colvar='agec')
+p1 + facet_grid(agec~region, scales='free')
+
 ```
