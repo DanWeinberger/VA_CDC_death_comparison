@@ -162,7 +162,7 @@ The key for ORIGIN is as follows:
 
 ## Model
 
-Fit to VA and CDC data separately
+Evaluate different levels of precision
 ```{r}
 
 combine.data <- list('va'=v1)
@@ -179,7 +179,12 @@ dic <- cbind.data.frame('test.tau'=test.tau, 'dic'=sapply(mod.comp, '[[','dic'))
 plot(dic$test.tau, dic$dic-min(dic$dic))
 abline(h=2)
 
-mod1 <- pblapply(combine.data, inla_model1,prec.prior1=0.6)
+```
+
+
+```{r}
+
+mod1 <- pblapply(combine.data, inla_model1,prec.prior1=0.5)
 res1 <- bind_rows( mod1$va$preds_covars.m) #add VA data too
 
 ```
