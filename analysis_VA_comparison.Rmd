@@ -1,0 +1,264 @@
+---
+title: "Excess death in the US by age"
+author: "Dan Weinberger"
+date: "10/29/2020"
+output:
+  html_document:
+    df_print: paged
+    html_document: null
+    toc: yes
+    toc_depth: 2
+    toc_float: yes
+  word_document:
+    toc: yes
+    toc_depth: '2'
+  pdf_document: 
+    keep_tex:  true
+params:
+  agg.level: 'state'
+  n.days.filter: 20
+  web.version: FALSE
+  extrap.date: '2020-01-26'
+  count.start.date: '2020-03-01'
+  end.data.date: '2020-09-05'
+---
+
+```{r, include = F}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  echo=F,
+  warning=FALSE, 
+  message=FALSE,
+  comment = "#>",
+  dev=c('png','pdf'),
+  fig.path='./figures/',
+  gganimate = list(
+    nframes = 50)
+)
+
+```
+
+```{r setup}
+library(readxl)
+library(cdcfluview)
+library(reshape2)
+library(ggplot2)
+library(lubridate)
+library(RColorBrewer)
+library(plotly)
+library(MMWRweek)
+library(readr)
+library(rjson)
+library(parallel)
+library(htmlTable)
+library(RSocrata)
+library(pdftools)
+library(readr)
+library(patchwork)
+library(abind)
+library(INLA)
+library(gsubfn)
+library(dplyr)
+library(RCurl)
+library(dplyr)
+library(tidyverse)
+library(gifski)
+library(gganimate)
+library(shiny)
+library(rjags)
+library(INLA)
+library(lme4)
+library(pbapply)
+#library(jsonlite)
+set.seed(123)
+
+source('./R/process_va_region.R')
+source('./R/process_nchs_region.R')
+source('./R/inla_mod_grp.R')
+source('./R/plot_ts_region.R')
+source('./R/run_if_expired.R')
+source('./R/gen_pred_interval_inla.R')
+source('./R/popsize_formatting.R')
+source('./R/setup_CDC data_multilevel.R')
+source('./R/inla_model1.R')
+```
+
+Popsize for the CDC data
+```{r}
+filled_pop2 <- census_popsize_format()
+
+```
+
+Setup CDC data and merge with popsize
+```{r}
+ag3 <- cdc_data_setup_multilevel()
+```
+
+Read in VA data
+
+```{r}
+v1 <- read_csv('./Data/Confidential/aggdata_withregion.csv')
+v1$race_recode[is.na(v1$race_recode)] <- 999
+
+v1$N_deaths[v1$N_deaths=='<10'] <- 5 #just as a placeholder...can either have liam run the analysis locally to avoid masking, or figure out an imputation method
+v1$N_deaths <- as.numeric(v1$N_deaths)
+
+  v1$month <- NA
+  v1$month[v1$qtr==1] <- 1
+  v1$month[v1$qtr==2] <- 4
+  v1$month[v1$qtr==3] <- 7
+  v1$month[v1$qtr==4] <- 10
+  v1$date <- as.Date(paste(v1$year, v1$month, '01', sep='-'))
+
+  v1 <- v1[v1$date<=as.Date('2021-01-01'),]
+  
+  v1 <- v1[!is.na(v1$region) & !is.na(v1$sex) & !is.na(v1$agec),] # for now, ignore deaths where sex, or region or age is NA
+  
+  v1 %>%
+    group_by(agec, race_recode, region) %>%
+    summarize(N_deaths=sum(N_deaths))
+
+
+  v1$source <- 'va'
+  
+  v1$time <- round(as.numeric(v1$date - min(v1$date))/30.3)
+  v1$time_scale <- as.vector(scale(v1$time)) 
+
+  
+   v1$qtr2 <- 0
+  v1$qtr2[v1$qtr==2] <- 1
+  v1$qtr3 <- 0
+  v1$qtr3[v1$qtr==3] <- 1
+  v1$qtr4 <- 0
+  v1$qtr4[v1$qtr==4] <- 1
+  
+    v1$subgroup_combo <- as.factor(paste(v1$race_recode, v1$agec, v1$sex,v1$region))
+
+      v1$all_cause_pre <- v1$N_deaths
+  v1$all_cause_pre[v1$date >= '2020-03-01'] <- NA
+  v1$race_recode <- as.factor(v1$race_recode)
+  
+plot.fun <- function(ds=ds1,xvar='date', yvar, ylab='N deaths',plot.type='line'){
+  ggplot(ds, aes_string(x=xvar, y=yvar)) +
+    {if(plot.type=='line')geom_line() } +
+    {if(plot.type=='point')geom_point() } +
+      ylab(ylab) +
+      xlab("Date") +
+      theme_classic() +
+      facet_wrap(agec~region , scales='free') +
+      theme(panel.spacing= unit(2,'lines') , axis.text.x=element_text(angle=90)) +
+      geom_hline(yintercept=0, col='gray', lty=2) 
+}
+
+plot.fun(ds= v1[v1$sex=='M' &v1$race_recode=='1',], xvar='date', yvar='N_deaths')
+
+plot.fun(ds= v1[v1$sex=='F' &v1$race_recode=='1',], xvar='date', yvar='N_deaths')
+
+plot.fun(ds= v1[v1$sex=='M' &v1$race_recode=='2',], xvar='date', yvar='N_deaths')
+
+```
+
+
+https://www.census.gov/programs-surveys/popest/technical-documentation/research/evaluation-estimates/2020-evaluation-estimates/2010s-state-detail.html
+Race:
+1 = White Alone
+2 = Black or African American Alone
+3 = American Indian or Alaska Native Alone
+4 = Asian Alone
+5 = Native Hawaiian and Other Pacific Islander Alone
+6 = Two or more races
+
+Sex: 
+0 = Total
+1 = Male
+2 = Female
+
+The key for ORIGIN is as follows:
+0 = Total
+1 = Not Hispanic
+2 = Hispanic
+
+ 01 ... Under 1 year (includes not stated infant ages)
+ 02 ... 1 - 4 years
+ 03 ... 5 - 14 years
+ 04 ... 15 - 24 years
+ 05 ... 25 - 34 years
+ 06 ... 35 - 44 years
+ 07 ... 45 - 54 years
+ 08 ... 55 - 64 years
+ 09 ... 65 - 74 years
+ 10 ... 75 - 84 years
+ 11 ... 85 years and over
+ 12 ... Age not stated
+
+
+
+## Model
+
+Fit to VA and CDC data separately
+```{r}
+
+combine.data <- list('cdc'=ag3, 'va'=v1)
+
+mod1 <- pblapply(combine.data, inla_model1)
+
+
+res1 <- bind_rows(mod1$cdc$preds_covars.m, mod1$va$preds_covars.m) #add VA data too
+
+```
+
+We can then take the results from the INLA and aggregate over different groups. For example, by age:
+```{r}
+
+
+preds.age <- res1 %>%
+  group_by(source,agec, date, variable) %>%
+  summarise( 'N_deaths'=sum(N_deaths), 'pred'=sum(value) ) %>%
+  ungroup() %>%
+  group_by(source,agec, date) %>%
+  summarise( 'N_deaths'=mean(N_deaths), 'pred_median'=median(pred), pred_lcl=quantile(pred,probs=0.025), pred_ucl=quantile(pred,probs=0.975) )
+```
+
+```{r, fig.width=8, fig.height=12}
+ p1 <- ggplot(preds.age[preds.age$source=='va',], aes(x=date, y=N_deaths , group=agec, col=agec)) +
+    geom_line() +
+    geom_line(aes(x=date, y=pred_median, group=agec), lty=2, col='black') +
+    geom_ribbon(aes(ymin=pred_lcl, ymax=pred_ucl), alpha=0.2, col='gray') +
+    ylab("Number of all-cause deaths") +
+    xlab("Date") +
+    theme_classic() +
+    theme(panel.spacing= unit(2,'lines') , axis.text.x=element_text(angle=90)) +
+    geom_hline(yintercept=0, col='gray', lty=2) +
+    geom_vline(xintercept=as.Date('2020-03-01'), col='gray', lty=2) +
+        facet_wrap(~agec , scales='free') +
+    xlim(as.Date('2014-01-01'), as.Date('2020-12-31')) +
+    theme(panel.spacing= unit(2,'lines') , axis.text.x=element_text(angle=90)) 
+p1
+```
+
+or by age and race
+```{r}
+preds.age.race <- res1 %>%
+  group_by(source,agec,race_recode, date, variable) %>%
+  summarise( 'N_deaths'=sum(N_deaths), 'pred'=sum(value) ) %>%
+  ungroup() %>%
+  group_by(source,agec, race_recode,date) %>%
+  summarise( 'N_deaths'=mean(N_deaths), 'pred_median'=median(pred), pred_lcl=quantile(pred,probs=0.025), pred_ucl=quantile(pred,probs=0.975) )
+```
+
+```{r}
+ p1 <- ggplot(preds.age.race[preds.age.race$agec=='75-84 years' & preds.age.race$source=='va',], aes(x=date, y=N_deaths )) +
+    geom_line() +
+    geom_line(aes(x=date, y=pred_median, group=agec), lty=2, col='black') +
+    geom_ribbon(aes(ymin=pred_lcl, ymax=pred_ucl), alpha=0.2, col='gray') +
+    ylab("Number of all-cause deaths") +
+    xlab("Date") +
+    theme_classic() +
+    theme(panel.spacing= unit(2,'lines') , axis.text.x=element_text(angle=90)) +
+    geom_hline(yintercept=0, col='gray', lty=2) +
+    geom_vline(xintercept=as.Date('2020-03-01'), col='gray', lty=2) +
+        facet_wrap(~race_recode , scales='free') +
+    xlim(as.Date('2014-01-01'), as.Date('2020-12-31')) +
+    theme(panel.spacing= unit(2,'lines') , axis.text.x=element_text(angle=90)) 
+p1
+```
