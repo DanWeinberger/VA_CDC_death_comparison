@@ -92,6 +92,7 @@ filled_pop2 <- census_popsize_format()
 Setup CDC data and merge with popsize
 ```{r}
 ag3 <- cdc_data_setup_multilevel()
+ag3$log_pop <- log(ag3$pop.interpol/100000)
 ```
 
 Read in VA data
@@ -99,6 +100,7 @@ Read in VA data
 ```{r}
 v1 <- read_csv('./Data/Confidential/aggdata_withregion.csv')
 v1$race_recode[is.na(v1$race_recode)] <- 999
+v1$pop <- v1$n #pop is specific to the agec, region, sex, year but does NOT vary by race or quarter
 
 v1$N_deaths[v1$N_deaths=='<10'] <- 5 #just as a placeholder...can either have liam run the analysis locally to avoid masking, or figure out an imputation method
 v1$N_deaths <- as.numeric(v1$N_deaths)
@@ -116,7 +118,7 @@ v1$N_deaths <- as.numeric(v1$N_deaths)
   
   v1 %>%
     group_by(agec, race_recode, region) %>%
-    summarize(N_deaths=sum(N_deaths))
+    summarize(N_deaths=sum(N_deaths),pop=mean(n))
 
 
   v1$source <- 'va'
@@ -138,24 +140,12 @@ v1$N_deaths <- as.numeric(v1$N_deaths)
   v1$all_cause_pre[v1$date >= '2020-01-01'] <- NA #bc it is quarterly data, Q1 includes pandeic period
   v1$race_recode <- as.factor(v1$race_recode)
   
-plot.fun <- function(ds=ds1,xvar='date', yvar, ylab='N deaths',plot.type='line'){
-  ggplot(ds, aes_string(x=xvar, y=yvar)) +
-    {if(plot.type=='line')geom_line() } +
-    {if(plot.type=='point')geom_point() } +
-      ylab(ylab) +
-      xlab("Date") +
-      theme_classic() +
-      facet_wrap(agec~region , scales='free') +
-      theme(panel.spacing= unit(2,'lines') , axis.text.x=element_text(angle=90)) +
-      geom_hline(yintercept=0, col='gray', lty=2) 
-}
+  v1 <- v1[v1$agec !="Under 25 Years",]
 
-plot.fun(ds= v1[v1$sex=='M' &v1$race_recode=='1',], xvar='date', yvar='N_deaths')
-
-plot.fun(ds= v1[v1$sex=='F' &v1$race_recode=='1',], xvar='date', yvar='N_deaths')
-
-plot.fun(ds= v1[v1$sex=='M' &v1$race_recode=='2',], xvar='date', yvar='N_deaths')
-
+    v1$inc <- v1$N_deaths/v1$pop*100000
+    v1$log_pop <- log(v1$pop/100000)
+    
+    v1 <- v1[v1$year <=2020,]
 ```
 
 
@@ -194,6 +184,24 @@ The key for ORIGIN is as follows:
 
 
 ## Model
+
+```{r}
+
+
+#Try different levels of tau to find optimum...this is a compromise between doing a full 
+test.tau <-  c(0.01,0.1,0.4,0.5,0.6,0.7, 0.7,1,1.1, 1.25, 1.5,2)
+mod.comp.va <- pblapply( test.tau, function(x) inla_model1(ds=v1, prec.prior1=x))
+mod.comp.cdc <- pblapply( test.tau, function(x) inla_model1(ds=ag3, prec.prior1=x))
+
+waic.va <- cbind.data.frame('test.tau'=test.tau, 'waic'=sapply(mod.comp.va, '[[','waic'))
+dic.va <- cbind.data.frame('test.tau'=test.tau, 'dic'=sapply(mod.comp.va, '[[','dic'))
+
+plot(dic.va$test.tau, dic.va$dic-min(dic.va$dic), type='l')
+abline(h=2)
+
+```
+
+
 
 Fit to VA and CDC data separately
 ```{r}
