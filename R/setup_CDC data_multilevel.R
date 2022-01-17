@@ -2,6 +2,8 @@
 ## Set up data for multilevel model
 
 cdc_data_setup_multilevel <- function(){
+  
+  #RAW DATA READ USING READ_MortalityTapes.R
   ag3 <- readRDS('./Data/Confidential/compiled_sex_age_race_qtr_region.rds')
   ag3$month <- NA
   ag3$month[ag3$qtr==1] <- 1
@@ -22,8 +24,7 @@ cdc_data_setup_multilevel <- function(){
   ag3$sex <- as.factor(ag3$sex)
   #ag3$state <- as.factor(ag3$state)
   #mod.inla <- inla(all_cause ~  , family='poisson')
-  ag3$all_cause_pre <- ag3$N_deaths
-  ag3$all_cause_pre[ag3$date >= '2020-03-01'] <- NA
+  
   ag3$time_scale <- as.vector(scale(ag3$time))
   # ag3.pre <- ag3[ag3$week_end < '2020-03-01',] %>%
   #   group_by(state,age_group) %>%
@@ -58,8 +59,36 @@ cdc_data_setup_multilevel <- function(){
   
   ag3 <- ag3[!is.na(ag3$region),]
   
+  # Agec
+  # 01 ... Under 1 year (includes not stated infant ages)
+  # 02 ... 1 - 4 years
+  # 03 ... 5 - 14 years
+  # 04 ... 15 - 24 years
+  # 05 ... 25 - 34 years
+  # 06 ... 35 - 44 years
+  # 07 ... 45 - 54 years
+  # 08 ... 55 - 64 years
+  # 09 ... 65 - 74 years
+  # 10 ... 75 - 84 years
+  # 11 ... 85 years and over
+  # 12 ... Age not stated
+  
+  ag3$agec <- NA
+  ag3$agec[ag3$age_group %in% c('01','02','03','04')] <- "Under 25 Years"
+  ag3$agec[ag3$age_group %in% c('05','06')] <- "25-44 years"
+  ag3$agec[ag3$age_group %in% c('07','08')] <- "45-64 years"
+  ag3$agec[ag3$age_group %in% c('09')] <- "65-74 years"
+  ag3$agec[ag3$age_group %in% c('10')] <- "75-84 years"
+  ag3$agec[ag3$age_group %in% c('11')] <- '85 years and older'
+  
   ag3$source <- 'cdc'
 
+  ag3 <- ag3 %>%
+    group_by(sex,race_recode,agec,region,date,year,qtr,source, time_scale, qtr2, qtr3, qtr4, subgroup_combo) %>%
+    summarise('N_deaths'=sum(N_deaths), 'pop.interpol'=sum(pop.interpol))
+  
+  ag3$all_cause_pre <- ag3$N_deaths
+  ag3$all_cause_pre[ag3$date >= '2020-01-01'] <- NA #bc it is quarterly data, Q1 includes pandeic period
 return(ag3)
 }
 #ag3 <- ag3[ag3$year<=2020,]

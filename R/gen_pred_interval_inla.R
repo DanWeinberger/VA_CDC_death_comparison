@@ -47,8 +47,8 @@ gen_pred_interval_inla <- function(inla_obj, covar.df, mod.mat, source,log.offse
   
   
   #sex, race_recode, agec
-  preds_covars <- cbind.data.frame(posterior.preds.c, covar.df[,c('sex', 'race_recode','agec', 'date','N_deaths')])
-  preds_covars.m <- melt(preds_covars, id.vars=c('sex', 'race_recode','agec', 'date','N_deaths'))
+  preds_covars <- cbind.data.frame(posterior.preds.c, covar.df[,c('sex','region', 'race_recode','agec', 'date','N_deaths')])
+  preds_covars.m <- melt(preds_covars, id.vars=c('sex','region', 'race_recode','agec', 'date','N_deaths'))
   
   preds.summary$source <- source
   preds_covars.m$source <- source
