@@ -1,4 +1,4 @@
-inla_model1 <- function(ds){
+inla_model1 <- function(ds,prec.prior1=1){
   form1 <- as.formula(all_cause_pre ~
                         1 + time_scale + qtr2 + qtr3 +qtr4 +
                         agec + race_recode + sex +  subgroup_combo +
@@ -16,12 +16,16 @@ inla_model1 <- function(ds){
   
   mod.inla2 <- inla(form1, 
                     family='poisson', data=ds,
-                    control.compute=list(config = TRUE),
-                    control.fixed=list(mean=0, prec=1) #INFORMATIVE PRIOR
+                    control.compute=list(config = TRUE, dic=T, waic=T),
+                    control.fixed=list(mean=0, prec=prec.prior1) #INFORMATIVE PRIOR
   )
   #summary(mod.inla2)
   
-  preds.inla2 <- gen_pred_interval_inla(inla_obj=mod.inla2, covar.df=ds, mod.mat=mod.mat1 , source= unique(ds$source) ,log.offset1=ds$log_pop)
+  waic = mod.inla2$waic$waic
+  dic = mod.inla2$dic$dic
+  
+  res1 <- gen_pred_interval_inla(inla_obj=mod.inla2, covar.df=ds, mod.mat=mod.mat1 , source= unique(ds$source) ,log.offset1=ds$log_pop)
 
+  preds.inla2= c(res1, 'waic'=waic, 'dic'=dic)
   return(preds.inla2)
 }
