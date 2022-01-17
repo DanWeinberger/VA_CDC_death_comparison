@@ -14,13 +14,6 @@ output:
     toc_depth: '2'
   pdf_document: 
     keep_tex:  true
-params:
-  agg.level: 'state'
-  n.days.filter: 20
-  web.version: FALSE
-  extrap.date: '2020-01-26'
-  count.start.date: '2020-03-01'
-  end.data.date: '2020-09-05'
 ---
 
 ```{r, include = F}
@@ -91,6 +84,7 @@ Read in VA data
 ```{r}
 v1 <- read_csv('./Data/Confidential/aggdata_withregion.csv')
 v1$race_recode[is.na(v1$race_recode)] <- 999
+v1$pop <- v1$n #pop is specific to the agec, region, sex, year but does NOT vary by race or quarter
 
 v1$N_deaths[v1$N_deaths=='<10'] <- 5 #just as a placeholder...can either have liam run the analysis locally to avoid masking, or figure out an imputation method
 v1$N_deaths <- as.numeric(v1$N_deaths)
@@ -108,7 +102,7 @@ v1$N_deaths <- as.numeric(v1$N_deaths)
   
   v1 %>%
     group_by(agec, race_recode, region) %>%
-    summarize(N_deaths=sum(N_deaths))
+    summarize(N_deaths=sum(N_deaths),pop=mean(n))
 
 
   v1$source <- 'va'
@@ -131,14 +125,19 @@ v1$N_deaths <- as.numeric(v1$N_deaths)
   v1$race_recode <- as.factor(v1$race_recode)
   
   v1 <- v1[v1$agec !="Under 25 Years",]
+
+    v1$inc <- v1$N_deaths/v1$pop*100000
+    v1$log_pop <- log(v1$pop/100000)
+    
+    v1 <- v1[v1$year <=2020,]
 ```
 
 ```{r, fig.width=8, fig.height=8}
-plot.fun(ds= v1[v1$sex=='M' &v1$race_recode=='1',], xvar='date', yvar='N_deaths')
+plot.fun(ds= v1[v1$sex=='M' &v1$race_recode=='1',], xvar='date', yvar='inc')
 
-plot.fun(ds= v1[v1$sex=='F' &v1$race_recode=='1',], xvar='date', yvar='N_deaths')
+plot.fun(ds= v1[v1$sex=='F' &v1$race_recode=='1',], xvar='date', yvar='inc')
 
-plot.fun(ds= v1[v1$sex=='M' &v1$race_recode=='2',], xvar='date', yvar='N_deaths')
+plot.fun(ds= v1[v1$sex=='M' &v1$race_recode=='2',], xvar='date', yvar='inc')
 ```
 
 https://www.census.gov/programs-surveys/popest/technical-documentation/research/evaluation-estimates/2020-evaluation-estimates/2010s-state-detail.html
@@ -234,16 +233,18 @@ p1 + facet_wrap(~agec, scales='free')
 
 or by age and race
 
-```{r}
+```{r, fig.width=8, fig.height=6}
+
 p1 <- obs_exp_plot(ds=preds.age_race[preds.age_race$source=='va',], xvar='date',yvar='N_deaths', groupvar='agec', colvar='agec')
-p1 + facet_wrap(~race_recode, scales='free')
+
+p1 + facet_grid(agec~race_recode, scales='free')
 
 ```
 
 
 Age and region 
-```{r}
+```{r, fig.width=8, fig.height=6}
 p1 <- obs_exp_plot(ds=preds.age.region[preds.age.region$source=='va',], xvar='date',yvar='N_deaths', groupvar='agec', colvar='agec')
-p1 + facet_wrap(~region, scales='free')
+p1 + facet_grid(agec~region, scales='free')
 
 ```

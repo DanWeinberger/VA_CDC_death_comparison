@@ -13,8 +13,8 @@ gen_pred_interval_inla <- function(inla_obj, covar.df, mod.mat, source,log.offse
   
   sample.ds1 <- sapply(r.samples, function(x){
     betas <- x$latent[pred.names,, drop=F]
-   # pred1 <- exp(as.vector(mod.mat %*% betas) + log.offset1 )
-     pred1 <- exp(as.vector(mod.mat %*% betas)  )
+    pred1 <- exp(as.vector(mod.mat %*% betas) + log.offset1 )
+   #  pred1 <- exp(as.vector(mod.mat %*% betas)  )
     
     return(pred1)
   }, simplify='array')

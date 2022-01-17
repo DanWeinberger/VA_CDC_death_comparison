@@ -4,10 +4,8 @@ inla_model1 <- function(ds){
                         agec + race_recode + sex +  subgroup_combo +
                         agec*(time_scale + qtr2 + qtr3 +qtr4) +
                         race_recode*(time_scale + qtr2 + qtr3 +qtr4)+
-                        region*(time_scale + qtr2 + qtr3 +qtr4)
-                         )
-  #+
-                        #offset(log_pop))
+                        region*(time_scale + qtr2 + qtr3 +qtr4)  +
+                        offset(log_pop))
   mod.mat1 <- model.matrix(~
                              1 + time_scale + qtr2 + qtr3 +qtr4 +
                              agec + race_recode + sex +  subgroup_combo +
@@ -23,7 +21,7 @@ inla_model1 <- function(ds){
   )
   #summary(mod.inla2)
   
-  preds.inla2 <- gen_pred_interval_inla(inla_obj=mod.inla2, covar.df=ds, mod.mat=mod.mat1 , source= unique(ds$source) )#,log.offset1=ds$log_pop)
+  preds.inla2 <- gen_pred_interval_inla(inla_obj=mod.inla2, covar.df=ds, mod.mat=mod.mat1 , source= unique(ds$source) ,log.offset1=ds$log_pop)
 
   return(preds.inla2)
 }
