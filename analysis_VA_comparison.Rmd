@@ -252,7 +252,7 @@ preds.age.race.region <- res1 %>%
 
 
 ```{r}
- obs_exp_plot <- function(ds, xvar, yvar, groupvar, colvar){
+ obs_exp_plot <- function(ds, xvar, yvar, groupvar, colvar, datemin='2014-01-01'){
    ds %>%
      mutate('agec'=as.factor(agec)) %>%
    ggplot(aes_string(x=xvar, y=yvar , group=groupvar, col=colvar)) +
@@ -265,8 +265,8 @@ preds.age.race.region <- res1 %>%
     theme_classic() +
     theme(panel.spacing= unit(2,'lines') , axis.text.x=element_text(angle=90)) +
     geom_hline(yintercept=0, col='gray', lty=2) +
-    geom_vline(xintercept=as.Date('2020-03-01'), col='gray', lty=2) +
-    xlim(as.Date('2014-01-01'), as.Date('2020-12-31')) +
+    geom_vline(xintercept=as.Date('2019-11-01'), col='gray', lty=2) +
+    xlim(as.Date(datemin), as.Date('2020-12-31')) +
     theme(panel.spacing= unit(2,'lines') , axis.text.x=element_text(angle=90)) 
 }
 ```
@@ -281,7 +281,7 @@ or by age and race
 
 ```{r, fig.width=8, fig.height=6}
 
-p1 <- obs_exp_plot(ds=preds.age_race[preds.age_race$source=='va',], xvar='date',yvar='N_deaths', groupvar='agec', colvar='agec')
+p1 <- obs_exp_plot(ds=preds.age_race[preds.age_race$source=='va',], xvar='date',yvar='N_deaths', groupvar='agec', colvar='agec', datemin='2018-01-01')
 
 p1 + facet_grid(agec~race_recode, scales='free')
 
@@ -290,7 +290,7 @@ p1 + facet_grid(agec~race_recode, scales='free')
 
 Age and region 
 ```{r, fig.width=8, fig.height=6}
-p1 <- obs_exp_plot(ds=preds.age.region[preds.age.region$source=='cdc',], xvar='date',yvar='N_deaths', groupvar='agec', colvar='agec')
+p1 <- obs_exp_plot(ds=preds.age.region[preds.age.region$source=='cdc',], xvar='date',yvar='N_deaths', groupvar='agec', colvar='agec', datemin='2018-01-01')
 p1 + facet_grid(agec~region, scales='free')
 
 ```
