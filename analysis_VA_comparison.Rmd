@@ -256,7 +256,7 @@ preds.age.race.region <- res1 %>%
      mutate('agec'=as.factor(agec)) %>%
    ggplot(aes_string(x=xvar, y=yvar , group=groupvar, col=colvar)) +
     geom_line() +
-     geom_point()+
+   #  geom_point()+
     geom_line(aes(x=date, y=pred_median, group=agec), lty=2, col='black') +
     geom_ribbon(aes(ymin=pred_lcl, ymax=pred_ucl), alpha=0.2, col='gray') +
     ylab("Number of all-cause deaths") +
@@ -264,14 +264,14 @@ preds.age.race.region <- res1 %>%
     theme_classic() +
     theme(panel.spacing= unit(2,'lines') , axis.text.x=element_text(angle=90)) +
     geom_hline(yintercept=0, col='gray', lty=2) +
-    geom_vline(xintercept=as.Date('2014-11-01'), col='gray', lty=2) +
+    geom_vline(xintercept=as.Date('2019-11-01'), col='gray', lty=2) +
     xlim(as.Date(datemin), as.Date('2020-12-31')) +
     theme(panel.spacing= unit(2,'lines') , axis.text.x=element_text(angle=90)) 
 }
 ```
 
 ```{r, fig.width=8, fig.height=6}
-p1 <- obs_exp_plot(ds=preds.age[preds.age$source=='va',], xvar='date',yvar='N_deaths', groupvar='agec', colvar='agec')
+p1 <- obs_exp_plot(ds=preds.age[preds.age$source=='cdc',], xvar='date',yvar='N_deaths', groupvar='agec', colvar='agec')
 p1 + facet_wrap(~agec, scales='free')
 
 ```
@@ -289,7 +289,7 @@ p1 + facet_grid(agec~race_recode, scales='free')
 
 Age and region 
 ```{r, fig.width=8, fig.height=6}
-p1 <- obs_exp_plot(ds=preds.age.region[preds.age.region$source=='cdc',], xvar='date',yvar='N_deaths', groupvar='agec', colvar='agec', datemin='2018-01-01')
+p1 <- obs_exp_plot(ds=preds.age.region[preds.age.region$source=='cdc' & preds.age.region$agec !='Under 25 Years',], xvar='date',yvar='N_deaths', groupvar='agec', colvar='agec', datemin='2014-01-01')
 p1 + facet_grid(agec~region, scales='free')
 
 ```

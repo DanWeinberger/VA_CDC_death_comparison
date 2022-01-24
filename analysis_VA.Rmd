@@ -170,7 +170,7 @@ combine.data <- list('va'=v1)
 
 
 #Try different levels of tau to find optimum...this is a compromise between doing a full 
-test.tau <-  c(0.01,0.1,0.4,0.5,0.6,0.7, 0.7,1,1.1, 1.25, 1.5,2)
+test.tau <-  c(0.01,0.1,,0.5, 0.7,1, 1.25, 1.5,2,2.5, 3, 3.5, 4, 4.5, 5)
 mod.comp <- pblapply( test.tau, function(x) inla_model1(ds=v1, prec.prior1=x))
 
 waic <- cbind.data.frame('test.tau'=test.tau, 'waic'=sapply(mod.comp, '[[','waic'))
@@ -184,7 +184,7 @@ abline(h=2)
 
 ```{r}
 
-mod1 <- pblapply(combine.data, inla_model1,prec.prior1=0.5)
+mod1 <- pblapply(combine.data, inla_model1,prec.prior1=2) #Maybe update this
 res1 <- bind_rows( mod1$va$preds_covars.m) #add VA data too
 
 ```
@@ -234,7 +234,7 @@ preds.age.race.region <- res1 %>%
     theme_classic() +
     theme(panel.spacing= unit(2,'lines') , axis.text.x=element_text(angle=90)) +
     geom_hline(yintercept=0, col='gray', lty=2) +
-    geom_vline(xintercept=as.Date('2020-03-01'), col='gray', lty=2) +
+    geom_vline(xintercept=as.Date('2019-11-01'), col='gray', lty=2) +
     xlim(as.Date('2014-01-01'), as.Date('2020-12-31')) +
     theme(panel.spacing= unit(2,'lines') , axis.text.x=element_text(angle=90)) 
 }
