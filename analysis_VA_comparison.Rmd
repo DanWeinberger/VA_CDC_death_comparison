@@ -187,7 +187,7 @@ The key for ORIGIN is as follows:
 
 ## Model
 
-```{r}
+```{r, eval=F}
 
 
 #Try different levels of tau to find optimum...this is a compromise between doing a full 
@@ -265,14 +265,14 @@ preds.age.race.region <- res1 %>%
     theme_classic() +
     theme(panel.spacing= unit(2,'lines') , axis.text.x=element_text(angle=90)) +
     geom_hline(yintercept=0, col='gray', lty=2) +
-    geom_vline(xintercept=as.Date('2019-11-01'), col='gray', lty=2) +
+    geom_vline(xintercept=as.Date('2014-11-01'), col='gray', lty=2) +
     xlim(as.Date(datemin), as.Date('2020-12-31')) +
     theme(panel.spacing= unit(2,'lines') , axis.text.x=element_text(angle=90)) 
 }
 ```
 
 ```{r, fig.width=8, fig.height=6}
-p1 <- obs_exp_plot(ds=preds.age[preds.age$source=='cdc',], xvar='date',yvar='N_deaths', groupvar='agec', colvar='agec')
+p1 <- obs_exp_plot(ds=preds.age[preds.age$source=='va',], xvar='date',yvar='N_deaths', groupvar='agec', colvar='agec')
 p1 + facet_wrap(~agec, scales='free')
 
 ```
