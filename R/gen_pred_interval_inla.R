@@ -53,6 +53,8 @@ gen_pred_interval_inla <- function(inla_obj, covar.df, mod.mat, source,log.offse
   preds.summary$source <- source
   preds_covars.m$source <- source
   
+  preds_covars.m <- cbind.data.frame(preds_covars.m, log.offset1)
+  
     out.list= list('preds_time'=preds.summary,'preds_covars.m'=preds_covars.m)
   return(out.list)
 }
