@@ -67,6 +67,9 @@ set.seed(123)
 
 source('./R/read_dependent_scripts.R')
 
+std.pop.age.region.sex.race <- readRDS('./Data/std.pop.age.region.sex.race.rds')
+std.pop.age.sex.race <- readRDS('./Data/std.pop.age.sex.race.rds')
+
 ```
 
 Read in VA data
@@ -223,6 +226,16 @@ preds.age.yr <- res1 %>%
   summarize_grps_sums %>%
   ungroup() %>%
   group_by(source, year) %>%
+  summarize_grps_quantiles
+```
+
+```{r}
+#For creating standardized summaries of RR and incidence, start at most disaggregate level
+preds.age.race.region.sex.qtr <- res1[res1$year==2020,] %>%
+  group_by(source,agec,region,race_recode,sex, date, variable) %>%
+  summarize_grps_sums %>%
+  ungroup() %>%
+  group_by(source,agec,region,race_recode,sex, date) %>%
   summarize_grps_quantiles
 ```
 

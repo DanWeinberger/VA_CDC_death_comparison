@@ -34,7 +34,7 @@ summarize_grps_sums <- function(ds){
                'pred'=sum(value), 
                'popsum'=sum(exp(log.offset1)*100000),
                'n_times_agg'=length(unique(date))) %>%
-    mutate('RR'=N_deaths/pred,
+    mutate('RR'=(N_deaths+0.5)/(pred+0.5),
            'pop'=popsum/n_times_agg,
            'excess'=(N_deaths - pred),
            'excess_inc'=(N_deaths - pred)/(popsum/n_times_agg)*100000 ) 

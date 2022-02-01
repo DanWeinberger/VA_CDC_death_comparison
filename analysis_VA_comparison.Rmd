@@ -73,6 +73,8 @@ set.seed(123)
 
 source('./R/read_dependent_scripts.R')
 
+std.pop.age.region.sex.race <- readRDS('./Data/std.pop.age.region.sex.race.rds')
+std.pop.age.sex.race <- readRDS('./Data/std.pop.age.sex.race.rds')
 ```
 
 Popsize for the CDC data
@@ -85,6 +87,17 @@ Setup CDC data and merge with popsize
 ```{r}
 ag3 <- cdc_data_setup_multilevel()
 ag3$log_pop <- log(ag3$pop.interpol/100000)
+
+#Standard population for all strata
+# std.pop.age.region.sex.race <- ag3[ag3$date=='2019-10-01' & ag3$source=='cdc', c('agec','region','sex','race_recode','pop.interpol')]
+# 
+# 
+# std.pop.age.sex.race <- ag3[ag3$date=='2019-10-01' & ag3$source=='cdc' & ag3$region=='Northeast', c('agec','sex','race_recode','pop.interpol')]
+# 
+# saveRDS(std.pop.age.region.sex.race,'./Data/std.pop.age.region.sex.race.rds')
+# saveRDS(std.pop.age.sex.race,'./Data/std.pop.age.sex.race.rds')
+
+
 ```
 
 Read in VA data
@@ -207,6 +220,7 @@ mod1 <- pblapply(combine.data, inla_model1,prec.prior1=0.5)
 
 res1 <- bind_rows(mod1$cdc$preds_covars.m, mod1$va$preds_covars.m) #add VA data too
 
+res1$year <- year(res1$date)
 ```
 
 We can then take the results from the INLA and aggregate over different groups. For example, by age, by age/race, by age/region, by age/race/region:
@@ -237,6 +251,19 @@ preds.age.race.region <- res1 %>%
   summarize_grps_sums %>%
   ungroup() %>%
   group_by(source,agec,region,race_recode, date) %>%
+  summarize_grps_quantiles
+
+```
+
+Population-standardized rates and RRs
+```{r}
+res1$
+
+preds.age.race.region <- res1[res1$year==2020,] %>%
+  group_by(source,agec,region,race_recode,sex, date, variable) %>%
+  summarize_grps_sums %>%
+  ungroup() %>%
+  group_by(source,agec,region,race_recode,sex, date) %>%
   summarize_grps_quantiles
 ```
 

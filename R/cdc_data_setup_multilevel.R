@@ -33,15 +33,7 @@ cdc_data_setup_multilevel <- function(){
   #ag3 <- merge( ag3, ag3.pre, by=c('state','age_group'))
   ag3 <- merge(ag3, filled_pop2, by.x=c('sex','race_recode','agec','region', 'date'),by.y=c('sex','race','agec','region' ,'date'), all.x=T)
   ag3$log_pop <- log(ag3$pop.interpol/100000)
-  ag3$subgroup_combo <- as.factor(paste(ag3$race_recode, ag3$agec, ag3$sex,ag3$region))
-  ag3$subgroup_combo2 <- ag3$subgroup_combo
-  ag3$subgroup_combo3 <- ag3$subgroup_combo
-  ag3$subgroup_combo4 <- ag3$subgroup_combo
-  ag3$subgroup_combo5 <- ag3$subgroup_combo
-  ag3$agec2 <- ag3$agec
-  ag3$agec3 <- ag3$agec
-  ag3$agec4 <- ag3$agec
-  ag3$agec5 <- ag3$agec
+
   ag3$race_recode2 <- ag3$race_recode
   ag3$race_recode3 <- ag3$race_recode
   ag3$race_recode4 <- ag3$race_recode
@@ -80,6 +72,8 @@ cdc_data_setup_multilevel <- function(){
   ag3$agec[ag3$age_group %in% c('09')] <- "65-74 years"
   ag3$agec[ag3$age_group %in% c('10')] <- "75-84 years"
   ag3$agec[ag3$age_group %in% c('11')] <- '85 years and older'
+  
+  ag3$subgroup_combo <- as.factor(paste(ag3$race_recode, ag3$agec, ag3$sex,ag3$region))
   
   ag3$source <- 'cdc'
 
