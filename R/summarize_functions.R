@@ -11,6 +11,9 @@ summarize_grps_quantiles <- function(ds){
                'pred_lcl'=quantile(pred,probs=0.025), 
                'pred_ucl'=quantile(pred,probs=0.975),
                
+               'log_RR_median'=median(log(RR)),
+               'log_RR_SD' =sd(log(RR)),
+               
                'RR_median'=median(RR),
                'RR_lcl'=quantile(RR,probs=0.025),
                'RR_ucl'=quantile(RR,probs=0.975),
@@ -26,7 +29,7 @@ summarize_grps_quantiles <- function(ds){
 
 
 summarize_grps_sums <- function(ds){
- ds1<- ds %>%
+ ds1 <- ds %>%
     summarise( 'N_deaths'=sum(N_deaths), 
                'pred'=sum(value), 
                'popsum'=sum(exp(log.offset1)*100000),

@@ -65,17 +65,7 @@ library(pbapply)
 #library(jsonlite)
 set.seed(123)
 
-source('./R/process_va_region.R')
-source('./R/process_nchs_region.R')
-source('./R/inla_mod_grp.R')
-source('./R/plot_ts_region.R')
-source('./R/run_if_expired.R')
-source('./R/gen_pred_interval_inla.R')
-source('./R/popsize_formatting.R')
-source('./R/setup_CDC data_multilevel.R')
-source('./R/inla_model1.R')
-source('./R/plot_fun_ts.R')
-source('./R/summarize_functions.R')
+source('./R/read_dependent_scripts.R')
 
 ```
 
@@ -186,7 +176,7 @@ abline(h=2)
 
 mod1 <- pblapply(combine.data, inla_model1,prec.prior1=2) #Maybe update this
 res1 <- bind_rows( mod1$va$preds_covars.m) #add VA data too
-
+res1$year <- year(res1$date)
 ```
 
 
@@ -219,29 +209,31 @@ preds.age.race.region <- res1 %>%
   ungroup() %>%
   group_by(source,agec,region,race_recode, date) %>%
   summarize_grps_quantiles
-```
 
-```{r}
- obs_exp_plot <- function(ds, xvar, yvar, groupvar, colvar){
-   ds %>%
-     mutate('agec'=as.factor(agec)) %>%
-   ggplot(aes_string(x=xvar, y=yvar , group=groupvar, col=colvar)) +
-    geom_line() +
-    geom_line(aes(x=date, y=pred_median, group=agec), lty=2, col='black') +
-    geom_ribbon(aes(ymin=pred_lcl, ymax=pred_ucl), alpha=0.2, col='gray') +
-    ylab("Number of all-cause deaths") +
-    xlab("Date") +
-    theme_classic() +
-    theme(panel.spacing= unit(2,'lines') , axis.text.x=element_text(angle=90)) +
-    geom_hline(yintercept=0, col='gray', lty=2) +
-    geom_vline(xintercept=as.Date('2019-11-01'), col='gray', lty=2) +
-    xlim(as.Date('2014-01-01'), as.Date('2020-12-31')) +
-    theme(panel.spacing= unit(2,'lines') , axis.text.x=element_text(angle=90)) 
-}
+#Across multiple time points--this needs
+preds.age.yr <- res1 %>%
+  group_by(source,agec, year, variable) %>%
+  summarize_grps_sums %>%
+  ungroup() %>%
+  group_by(source,agec, year) %>%
+  summarize_grps_quantiles
+
+preds.age.yr <- res1 %>%
+  group_by(source, year, variable) %>%
+  summarize_grps_sums %>%
+  ungroup() %>%
+  group_by(source, year) %>%
+  summarize_grps_quantiles
 ```
 
 ```{r, fig.width=8, fig.height=6}
 p1 <- obs_exp_plot(ds=preds.age[preds.age$source=='va',], xvar='date',yvar='N_deaths', groupvar='agec', colvar='agec')
+p1 + facet_wrap(~agec, scales='free')
+
+```
+
+```{r, fig.width=8, fig.height=6}
+p1 <- RR_plot(ds=preds.age[preds.age$source=='va',],  groupvar='agec', colvar='agec')
 p1 + facet_wrap(~agec, scales='free')
 
 ```
@@ -257,9 +249,23 @@ p1 + facet_grid(agec~race_recode, scales='free')
 ```
 
 
+```{r, fig.width=8, fig.height=6}
+
+p1 <- RR_plot(ds=preds.age_race[preds.age_race$source=='va',],  groupvar='agec', colvar='agec', datemin='2018-01-01') 
+
+
+p1 + facet_grid(agec~race_recode, scales='free')
+
+```
 Age and region 
 ```{r, fig.width=8, fig.height=6}
 p1 <- obs_exp_plot(ds=preds.age.region[preds.age.region$source=='va',], xvar='date',yvar='N_deaths', groupvar='agec', colvar='agec')
+p1 + facet_grid(agec~region, scales='free')
+
+```
+
+```{r, fig.width=8, fig.height=6}
+p1 <- RR_plot(ds=preds.age.region[preds.age.region$source=='va',],  groupvar='agec', colvar='agec', datemin='2018-01-01') 
 p1 + facet_grid(agec~region, scales='free')
 
 ```
