@@ -218,32 +218,13 @@ The key for ORIGIN is as follows:
 
 ## Model
 
-```{r, eval=F}
-
-
-#Try different levels of tau to find optimum...this is a compromise between doing a full 
-test.tau <-  c(0.01,0.1,0.4,0.5,0.6,0.7, 0.7,1,1.1, 1.25, 1.5,2)
-mod.comp.va <- pblapply( test.tau, function(x) inla_model1(ds=v1, prec.prior1=x))
-mod.comp.cdc <- pblapply( test.tau, function(x) inla_model1(ds=ag3, prec.prior1=x))
-
-waic.va <- cbind.data.frame('test.tau'=test.tau, 'waic'=sapply(mod.comp.va, '[[','waic'))
-dic.va <- cbind.data.frame('test.tau'=test.tau, 'dic'=sapply(mod.comp.va, '[[','dic'))
-dic.cdc <- cbind.data.frame('test.tau'=test.tau, 'dic'=sapply(mod.comp.cdc, '[[','dic'))
-
-plot(dic.va$test.tau, dic.va$dic-min(dic.va$dic), type='l')
-points(dic.cdc$test.tau, dic.cdc$dic-min(dic.cdc$dic), type='l', col='red')
-abline(h=2)
-
-```
-
-
 
 Fit to VA and CDC data separately
 ```{r}
 
 combine.data <- list('cdc'=ag3, 'va'=v1)
 
-mod1 <- pblapply(combine.data, inla_model1,prec.prior1=0.5)
+mod1 <- pblapply(combine.data, inla_model2)
 
 
 res1 <- bind_rows(mod1$cdc$preds_covars.m, mod1$va$preds_covars.m) #add VA data too
@@ -318,7 +299,7 @@ p1 + facet_wrap(~agec, scales='free')
 ```
 
 ```{r, fig.width=8, fig.height=6}
-p1 <- RR_plot(ds=preds.age[preds.age$source=='cdc',],  groupvar='agec', colvar='agec')
+p1 <- RR_plot(ds=preds.age )
 p1 + facet_wrap(~agec, scales='free')
 
 ```
