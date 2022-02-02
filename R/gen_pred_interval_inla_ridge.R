@@ -1,4 +1,4 @@
-gen_pred_interval_inla_ridge <- function(inla_obj, Z,covar.df, mod.mat, source,log.offset1=NULL){
+gen_pred_interval_inla_ridge <- function(inla_obj, X,Za,Zb, Zc,covar.df, mod.mat, source,log.offset1=NULL){
   
   nrep1=20
   nrep2=21
@@ -7,7 +7,12 @@ gen_pred_interval_inla_ridge <- function(inla_obj, Z,covar.df, mod.mat, source,l
   
   all.names <- dimnames(r.samples[[1]]$latent)[[1]] 
   
-  pred.names <- c('X:1',all.names[grep('idx.Z', all.names) ][-c(1:nrow(Z))] )
+  X.names <- paste0(dimnames(X)[[2]], ':1')
+  Za.names <- all.names[grep('idx.Za', all.names) ][-c(1:nrow(Za))] 
+  Zb.names <- all.names[grep('idx.Zb', all.names) ][-c(1:nrow(Zb))] 
+  Zc.names <- all.names[grep('idx.Zc', all.names) ][-c(1:nrow(Zc))] 
+  
+  pred.names <- c(X.names,Za.names,Zb.names,Zc.names)
   # pred.names.check <- gsub(':1','', pred.names)
   #  sum(pred.names.check==colnames(mod.mat)) #order is correct
   

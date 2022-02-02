@@ -70,6 +70,6 @@ return(filled_pop2)
 
 #Check
 
-check1 <- filled_pop2 %>%
-  group_by(date,race) %>%
-  summarize(popsum=sum(pop.interpol))
+# check1 <- filled_pop2 %>%
+#   group_by(date,race) %>%
+#   summarize(popsum=sum(pop.interpol))

@@ -225,7 +225,7 @@ Fit to VA and CDC data separately
 
 combine.data <- list('cdc'=ag3, 'va'=v1)
 
-mod1 <- pblapply(combine.data, inla_model2)
+mod1 <- pblapply(combine.data, inla_model3)
 
 
 res1 <- bind_rows(mod1$cdc$preds_covars.m, mod1$va$preds_covars.m) #add VA data too
@@ -289,7 +289,7 @@ std.inc <- preds.age.race.region[preds.age.race.region$race_recode != '999',] %>
   group_by(source,date) %>%
   summarize(std_excess_inc=sum(excess_inc_median*pop.prop)) %>%
   ungroup()
-
+std.inc
 
 ```
 
@@ -314,14 +314,8 @@ p1 <- obs_exp_plot(ds=preds.age.race.region[preds.age.race.region$source=='va' &
 
 p1 + facet_grid(~agec, scales='free')
 
-```
-
-```{r, fig.width=8, fig.height=6}
-
-p1 <- RR_plot(ds=preds.age.race.region[preds.age.race.region$source=='va' & preds.age.race.region$race_recode=='1',],  groupvar='agec', colvar='agec', datemin='2018-01-01') 
-
-
-p1 + facet_grid(~agec, scales='free')
+p1 <- RR_plot(ds=preds.age.race.region[ preds.age.race.region$race_recode=='1',] )
+p1 + facet_grid(region~agec, scales='free')
 
 ```
 
@@ -333,8 +327,8 @@ p1 + facet_grid(agec~region, scales='free')
 ```
 
 ```{r, fig.width=8, fig.height=6}
-p1 <- RR_plot(ds=preds.age.region[preds.age.region$source=='cdc',],  groupvar='agec', colvar='agec', datemin='2018-01-01') 
-p1 + facet_grid(agec~region, scales='free')
+p1 <- RR_plot(ds=preds.age.region[preds.age.region$agec !='Under 25 Years',])
+p1 + facet_grid(region~agec, scales='free')
 
 ```
 
