@@ -10,6 +10,8 @@ source('./R/popsize_formatting.R')
 source('./R/cdc_data_setup_multilevel.R')
 source('./R/inla_model1.R')
 source('./R/inla_model2.R')
+source('./R/inla_model3.R')
+
 
 source('./R/plot_fun_ts.R')
 source('./R/summarize_functions.R')

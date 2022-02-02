@@ -178,7 +178,7 @@ The key for ORIGIN is as follows:
 
 ```{r}
 
-mod1 <- pblapply(combine.data, inla_model2) #Maybe update this
+mod1 <- pblapply(combine.data, inla_model3) #Maybe update this
 res1 <- bind_rows( mod1$va$preds_covars.m) #add VA data too
 res1$year <- year(res1$date)
 ```
