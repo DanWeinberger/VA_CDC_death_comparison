@@ -141,7 +141,7 @@ p0 <- ggplot(comp_inc,aes(x=inc_cdc, y=inc_va)) +
 
 p0
 ```
-```
+
 
 ```{r, fig.width=8, fig.height=8}
 plot.fun(ds= v1[v1$sex=='M' &v1$race_recode=='1',], xvar='date', yvar='inc')
