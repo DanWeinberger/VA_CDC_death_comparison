@@ -133,6 +133,8 @@ comp_inc <- merge(summary.cdc,summary.va, by=c('agec', 'race_recode' ,'region'))
 
 comp_inc
 
+write.csv(comp_inc, './Data/compare_baseline_inc.csv')
+
 p0 <- ggplot(comp_inc,aes(x=inc_cdc, y=inc_va)) +
   geom_point() +
   theme_classic() +
