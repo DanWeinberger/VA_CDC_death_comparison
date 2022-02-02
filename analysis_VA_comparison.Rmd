@@ -105,6 +105,7 @@ ag3$log_pop <- log(ag3$pop.interpol/100000)
     summarize(N_deaths=sum(N_deaths),pop=mean(pop.interpol, na.rm=T)) %>%
     mutate(inc_cdc=N_deaths/pop*100000) %>%
     select(agec, race_recode, region, inc_cdc)
+  
   saveRDS(summary.cdc,'./Data/grp_inc_cdc.R')
 
 ```
@@ -173,7 +174,7 @@ comp_inc <- merge(summary.cdc,summary.va, by=c('agec', 'race_recode' ,'region'))
 p0 <- ggplot(comp_inc,aes(x=inc_cdc, y=inc_va)) +
   geom_point() +
   theme_classic() +
-      facet_wrap(~race_recode,  nrow=1) +
+      facet_wrap(~race_recode,  nrow=1,scales='free' ) +
   geom_abline(slope=1, intercept=0)
 
 p0
