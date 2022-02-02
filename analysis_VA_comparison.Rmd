@@ -337,6 +337,8 @@ p1 + facet_grid(agec~region, scales='free')
 
 ```
 
+
+Look at RR and excess rates by sex for VA vs CDC
 ```{r}
 
 
@@ -354,6 +356,21 @@ white.m <- reshape2::melt(preds.age.race.region[preds.age.race.region$race_recod
 
 white.c <- reshape2::dcast(white.m, date+sex+region+agec~variable +source)
 
-plot(white.c$RR_median_cdc, white.c$RR_median_va)
+
+p0 <- ggplot(white.c,aes(x=RR_median_cdc, y=RR_median_va)) +
+  geom_point() +
+  theme_classic() +
+      facet_wrap(~sex,  nrow=1) +
+  geom_abline(slope=1, intercept=0)
+
+p0
+
+p0 <- ggplot(white.c,aes(x=excess_inc_median_cdc, y=excess_inc_median_va)) +
+  geom_point() +
+  theme_classic() +
+      facet_wrap(~sex,  nrow=1) +
+  geom_abline(slope=1, intercept=0)
+
+p0
 ```
 
