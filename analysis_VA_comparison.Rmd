@@ -90,13 +90,22 @@ ag3$log_pop <- log(ag3$pop.interpol/100000)
 
 #Standard population for all strata
 # std.pop.age.region.sex.race <- ag3[ag3$date=='2019-10-01' & ag3$source=='cdc', c('agec','region','sex','race_recode','pop.interpol')]
+#names(std.pop.age.region.sex.race) <- c('agec','region','sex','race_recode','std.pop')
 # 
 # 
 # std.pop.age.sex.race <- ag3[ag3$date=='2019-10-01' & ag3$source=='cdc' & ag3$region=='Northeast', c('agec','sex','race_recode','pop.interpol')]
+#names(std.pop.age.sex.race) <- c('agec','sex','race_recode', 'std.pop')
 # 
 # saveRDS(std.pop.age.region.sex.race,'./Data/std.pop.age.region.sex.race.rds')
 # saveRDS(std.pop.age.sex.race,'./Data/std.pop.age.sex.race.rds')
 
+
+  summary.cdc <- ag3[ag3$year<2020,] %>%
+    group_by(agec, race_recode, region) %>%
+    summarize(N_deaths=sum(N_deaths),pop=mean(pop.interpol, na.rm=T)) %>%
+    mutate(inc_cdc=N_deaths/pop*100000) %>%
+    select(agec, race_recode, region, inc_cdc)
+  saveRDS(summary.cdc,'./Data/grp_inc_cdc.R')
 
 ```
 
@@ -121,9 +130,12 @@ v1$N_deaths <- as.numeric(v1$N_deaths)
   
   v1 <- v1[!is.na(v1$region) & !is.na(v1$sex) & !is.na(v1$agec),] # for now, ignore deaths where sex, or region or age is NA
   
-  v1 %>%
+  summary.va <- v1[v1$year<2020,] %>%
     group_by(agec, race_recode, region) %>%
-    summarize(N_deaths=sum(N_deaths),pop=mean(n))
+    summarize(N_deaths=sum(N_deaths),pop=mean(n)) %>%
+    mutate(inc_va=N_deaths/pop*100000) %>%
+    select(agec, race_recode, region, inc_va)
+
 
 
   v1$source <- 'va'
@@ -152,6 +164,22 @@ v1$N_deaths <- as.numeric(v1$N_deaths)
     
     v1 <- v1[v1$year <=2020,]
 ```
+
+## Compare baseline rates for VA and cdc by group
+```{r}
+comp_inc <- merge(summary.cdc,summary.va, by=c('agec', 'race_recode' ,'region'))
+
+
+p0 <- ggplot(comp_inc,aes(x=inc_cdc, y=inc_va)) +
+  geom_point() +
+  theme_classic() +
+      facet_wrap(~race_recode,  nrow=1) +
+  geom_abline(slope=1, intercept=0)
+
+p0
+
+```
+
 
 
 https://www.census.gov/programs-surveys/popest/technical-documentation/research/evaluation-estimates/2020-evaluation-estimates/2010s-state-detail.html
@@ -257,7 +285,6 @@ preds.age.race.region <- res1 %>%
 
 Population-standardized rates and RRs
 ```{r}
-res1$
 
 preds.age.race.region <- res1[res1$year==2020,] %>%
   group_by(source,agec,region,race_recode,sex, date, variable) %>%
@@ -265,10 +292,27 @@ preds.age.race.region <- res1[res1$year==2020,] %>%
   ungroup() %>%
   group_by(source,agec,region,race_recode,sex, date) %>%
   summarize_grps_quantiles
+
+
+##FOR NOW< IGNORE MISSING RACE CATEGORY WHEN CALCULATING STD RATES
+
+std.pop.age.region.sex.race <- std.pop.age.region.sex.race[std.pop.age.region.sex.race$agec!='Under 25 Years',]
+std.pop.age.region.sex.race$pop.prop <-
+  std.pop.age.region.sex.race$std.pop/sum(std.pop.age.region.sex.race$std.pop)
+
+preds.age.race.region <- merge(preds.age.race.region, std.pop.age.region.sex.race, by=c('agec','region','race_recode','sex'))
+
+
+std.inc <- preds.age.race.region[preds.age.race.region$race_recode != '999',] %>%
+  group_by(source,date) %>%
+  summarize(std_excess_inc=sum(excess_inc_median*pop.prop)) %>%
+  ungroup()
+
+
 ```
 
 ```{r, fig.width=8, fig.height=6}
-p1 <- obs_exp_plot(ds=preds.age[preds.age$source=='cdc',], xvar='date',yvar='N_deaths', groupvar='agec', colvar='agec')
+p1 <- obs_exp_plot(ds=preds.age[preds.age$source=='va',], xvar='date',yvar='N_deaths', groupvar='agec', colvar='agec')
 p1 + facet_wrap(~agec, scales='free')
 
 ```
@@ -284,18 +328,18 @@ or by age and race
 
 ```{r, fig.width=8, fig.height=6}
 
-p1 <- obs_exp_plot(ds=preds.age_race[preds.age_race$source=='va',], xvar='date',yvar='N_deaths', groupvar='agec', colvar='agec', datemin='2018-01-01')
+p1 <- obs_exp_plot(ds=preds.age.race.region[preds.age.race.region$source=='va' & preds.age.race.region$race_recode=='1',], xvar='date',yvar='N_deaths', groupvar='agec', colvar='agec', datemin='2018-01-01')
 
-p1 + facet_grid(agec~race_recode, scales='free')
+p1 + facet_grid(~agec, scales='free')
 
 ```
 
 ```{r, fig.width=8, fig.height=6}
 
-p1 <- RR_plot(ds=preds.age_race[preds.age_race$source=='va',],  groupvar='agec', colvar='agec', datemin='2018-01-01') 
+p1 <- RR_plot(ds=preds.age.race.region[preds.age.race.region$source=='va' & preds.age.race.region$race_recode=='1',],  groupvar='agec', colvar='agec', datemin='2018-01-01') 
 
 
-p1 + facet_grid(agec~race_recode, scales='free')
+p1 + facet_grid(~agec, scales='free')
 
 ```
 
@@ -311,3 +355,24 @@ p1 <- RR_plot(ds=preds.age.region[preds.age.region$source=='cdc',],  groupvar='a
 p1 + facet_grid(agec~region, scales='free')
 
 ```
+
+```{r}
+
+
+##FOR NOW< IGNORE MISSING RACE CATEGORY WHEN CALCULATING STD RATES
+
+
+std.inc.whites <- preds.age.race.region[preds.age.race.region$race_recode == '1',] %>%
+  group_by(source,date) %>%
+  mutate(pop.prop2 = std.pop/sum(std.pop)) %>%
+  summarize(std_excess_inc=sum(excess_inc_median*pop.prop2), check1=sum(pop.prop2)) %>%
+  ungroup()
+std.inc.whites
+
+white.m <- reshape2::melt(preds.age.race.region[preds.age.race.region$race_recode == '1',c('date','source','sex','agec','region','RR_median','excess_inc_median')], id.vars=c('date','source','agec','sex','region'))
+
+white.c <- reshape2::dcast(white.m, date+sex+region+agec~variable +source)
+
+plot(white.c$RR_median_cdc, white.c$RR_median_va)
+```
+

@@ -93,10 +93,11 @@ v1$N_deaths <- as.numeric(v1$N_deaths)
   
   v1 <- v1[!is.na(v1$region) & !is.na(v1$sex) & !is.na(v1$agec),] # for now, ignore deaths where sex, or region or age is NA
   
-  v1 %>%
+  summary.va <- v1[v1$year<2020,] %>%
     group_by(agec, race_recode, region) %>%
-    summarize(N_deaths=sum(N_deaths),pop=mean(n))
-
+    summarize(N_deaths=sum(N_deaths),pop=mean(n)) %>%
+    mutate(inc_va=N_deaths/pop*100000) %>%
+    select(agec, race_recode, region, inc_va)
 
   v1$source <- 'va'
   
@@ -123,6 +124,23 @@ v1$N_deaths <- as.numeric(v1$N_deaths)
     v1$log_pop <- log(v1$pop/100000)
     
     v1 <- v1[v1$year <=2020,]
+```
+
+## Compare VA group incidence with cdc
+```{r}
+summary.cdc <- readRDS('./Data/grp_inc_cdc.R')
+comp_inc <- merge(summary.cdc,summary.va, by=c('agec', 'race_recode' ,'region'))
+
+comp_inc
+
+p0 <- ggplot(comp_inc,aes(x=inc_cdc, y=inc_va)) +
+  geom_point() +
+  theme_classic() +
+      facet_wrap(~race_recode,  nrow=1) +
+  geom_abline(slope=1, intercept=0)
+
+p0
+```
 ```
 
 ```{r, fig.width=8, fig.height=8}
