@@ -59,8 +59,17 @@ census_popsize_format <- function(){
     mutate(pop.interpol=approx(time,popsize,time)$y)
   filled_pop2 <- filled_pop2[,c('agec','sex','race','region','date','pop.interpol')]
   
+  
+  
 return(filled_pop2)
 }
 
 # test1 <- filled_pop2[filled_pop2$state=='NY' & filled_pop2$age_group=="75-84 years",]
 # plot(test1$week_end, test1$pop.interpol)
+
+
+#Check
+
+check1 <- filled_pop2 %>%
+  group_by(date,race) %>%
+  summarize(popsum=sum(pop.interpol))

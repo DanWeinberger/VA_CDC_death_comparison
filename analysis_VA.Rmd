@@ -230,6 +230,7 @@ preds.age.yr <- res1 %>%
   summarize_grps_quantiles
 ```
 
+
 ```{r}
 #For creating standardized summaries of RR and incidence, start at most disaggregate level
 preds.age.race.region.sex.qtr <- res1[res1$year==2020,] %>%
