@@ -1,7 +1,7 @@
 RR_plot <- function(ds, xvar,  groupvar, colvar, datemin='2014-01-01', ylab1="Rate Ratio"){
   ds %>%
     mutate('agec'=as.factor(agec)) %>%
-    ggplot(aes(x=date, y=RR_median , group=groupvar, col=colvar)) +
+    ggplot(aes(x=date, y=RR_median , group=source, col=source)) +
     geom_line() +
     #  geom_point()+
     geom_ribbon(aes(ymin=RR_lcl, ymax=RR_ucl), alpha=0.2, col='gray') +

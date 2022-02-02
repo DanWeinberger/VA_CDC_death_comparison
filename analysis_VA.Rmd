@@ -175,29 +175,10 @@ The key for ORIGIN is as follows:
 
 ## Model
 
-Evaluate different levels of precision
-```{r}
-
-combine.data <- list('va'=v1)
-
-
-
-#Try different levels of tau to find optimum...this is a compromise between doing a full 
-test.tau <-  c(0.01,0.1,0.5, 0.7,1, 1.25, 1.5,2,2.5, 3, 3.5, 4, 4.5, 5)
-mod.comp <- pblapply( test.tau, function(x) inla_model1(ds=v1, prec.prior1=x))
-
-waic <- cbind.data.frame('test.tau'=test.tau, 'waic'=sapply(mod.comp, '[[','waic'))
-dic <- cbind.data.frame('test.tau'=test.tau, 'dic'=sapply(mod.comp, '[[','dic'))
-
-plot(dic$test.tau, dic$dic-min(dic$dic))
-abline(h=2)
-
-```
-
 
 ```{r}
 
-mod1 <- pblapply(combine.data, inla_model1,prec.prior1=2) #Maybe update this
+mod1 <- pblapply(combine.data, inla_model2) #Maybe update this
 res1 <- bind_rows( mod1$va$preds_covars.m) #add VA data too
 res1$year <- year(res1$date)
 ```
