@@ -145,6 +145,9 @@ out.ds <- call_inla(label='cdc', ds=ag3)
 ```{r}
 fit.plots <- mod.fit.plots()
 rr.plot1 <- rr.plots()
+saveRDS(fit.plots, './outputs/fit.plots.cdc.rds')
+saveRDS(rr.plot1, './outputs/rr.plots.cdc.rds')
+
 ```
 
 

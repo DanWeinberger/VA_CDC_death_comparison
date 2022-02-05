@@ -186,6 +186,8 @@ out.ds <- call_inla(label='va', ds=v1)
 ```{r}
 fit.plots <- mod.fit.plots()
 rr.plot1 <- rr.plots()
+saveRDS(fit.plots, './outputs/fit.plots.va.rds')
+saveRDS(rr.plot1, './outputs/rr.plots.va.rds')
 ```
 
 
