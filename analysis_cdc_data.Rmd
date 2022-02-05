@@ -1,0 +1,163 @@
+---
+title: "Excess death in the US by age"
+author: "Dan Weinberger"
+date: "10/29/2020"
+output:
+  html_document:
+    df_print: paged
+    html_document: null
+    toc: yes
+    toc_depth: 2
+    toc_float: yes
+  word_document:
+    toc: yes
+    toc_depth: '2'
+  pdf_document: 
+    keep_tex:  true
+params:
+  agg.level: 'state'
+  n.days.filter: 20
+  web.version: FALSE
+  extrap.date: '2020-01-26'
+  count.start.date: '2020-03-01'
+  end.data.date: '2020-09-05'
+---
+
+```{r, include = F}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  echo=F,
+  warning=FALSE, 
+  message=FALSE,
+  comment = "#>",
+  dev=c('png','pdf'),
+  fig.path='./figures/',
+  gganimate = list(
+    nframes = 50)
+)
+
+```
+
+```{r setup}
+library(readxl)
+library(cdcfluview)
+library(reshape2)
+library(ggplot2)
+library(lubridate)
+library(RColorBrewer)
+library(plotly)
+library(MMWRweek)
+library(readr)
+library(rjson)
+library(parallel)
+library(htmlTable)
+library(RSocrata)
+library(pdftools)
+library(readr)
+library(patchwork)
+library(abind)
+library(INLA)
+library(gsubfn)
+library(dplyr)
+library(RCurl)
+library(dplyr)
+library(tidyverse)
+library(gifski)
+library(gganimate)
+library(shiny)
+library(INLA)
+library(lme4)
+library(pbapply)
+#library(jsonlite)
+set.seed(123)
+
+source('./R/read_dependent_scripts.R')
+
+std.pop.age.region.sex.race <- readRDS('./Data/std.pop.age.region.sex.race.rds')
+std.pop.age.sex.race <- readRDS('./Data/std.pop.age.sex.race.rds')
+```
+
+Popsize for the CDC data
+```{r}
+filled_pop2 <- census_popsize_format()
+
+```
+
+Setup CDC data and merge with popsize
+```{r}
+ag3 <- cdc_data_setup_multilevel()
+ag3$log_pop <- log(ag3$pop.interpol/100000)
+
+ag3 <- ag3[ag3$agec !="Under 25 Years" ,]
+  # summary.cdc <- ag3[ag3$year<2020,] %>%
+  #   group_by(agec, race_recode, region) %>%
+  #   summarize(N_deaths=sum(N_deaths),pop=mean(pop.interpol, na.rm=T)) %>%
+  #   mutate(inc_cdc=N_deaths/pop*100000) %>%
+  #   select(agec, race_recode, region, inc_cdc)
+  # 
+  # saveRDS(summary.cdc,'./Data/grp_inc_cdc.R')
+
+```
+
+https://www.census.gov/programs-surveys/popest/technical-documentation/research/evaluation-estimates/2020-evaluation-estimates/2010s-state-detail.html
+Race:
+1 = White Alone
+2 = Black or African American Alone
+3 = American Indian or Alaska Native Alone
+4 = Asian Alone
+5 = Native Hawaiian and Other Pacific Islander Alone
+6 = Two or more races
+
+Sex: 
+0 = Total
+1 = Male
+2 = Female
+
+The key for ORIGIN is as follows:
+0 = Total
+1 = Not Hispanic
+2 = Hispanic
+
+ 01 ... Under 1 year (includes not stated infant ages)
+ 02 ... 1 - 4 years
+ 03 ... 5 - 14 years
+ 04 ... 15 - 24 years
+ 05 ... 25 - 34 years
+ 06 ... 35 - 44 years
+ 07 ... 45 - 54 years
+ 08 ... 55 - 64 years
+ 09 ... 65 - 74 years
+ 10 ... 75 - 84 years
+ 11 ... 85 years and over
+ 12 ... Age not stated
+
+
+
+## Fit Model
+
+
+Fit to VA and CDC data separately. This function saves to an rds file summary tables with the excess incidence and RR by group (excluding raw counts and denominators). It also outputs the full summary tables that can be used in plotting in the list out.ds
+```{r}
+out.ds <- call_inla(label='cdc', ds=ag3)
+
+```
+
+```{r}
+fit.plots <- mod.fit.plots()
+rr.plots <- rr.plots()
+```
+
+
+```{r, fig.width=8, fig.height=6}
+fit.plots$p1
+fit.plots$p3
+fit.plots$p5
+
+```
+
+```{r, fig.width=8, fig.height=6}
+rr.plots$p2
+rr.plots$p4
+rr.plots$p6
+
+```

@@ -50,7 +50,7 @@ census_popsize_format <- function(){
   empty_ts2$date[empty_ts2$qtr==1] <- (paste(empty_ts2$year[empty_ts2$qtr==1] ,'01','01', sep='-'))
   empty_ts2$date[empty_ts2$qtr==2] <- (paste(empty_ts2$year[empty_ts2$qtr==2] ,'04','01', sep='-'))
   empty_ts2$date <- as.Date(empty_ts2$date)
-  empty_ts2 <- empty_ts2[empty_ts2$date>='2014-07-01' ,] #UPDATE THIS!
+  empty_ts2 <- empty_ts2[empty_ts2$date>='2013-07-01' ,] #UPDATE THIS!
   empty_ts2 <- empty_ts2[empty_ts2$race !=6,]
   filled_pop2 <- empty_ts2 %>%
     group_by(agec , sex,race, region) %>%

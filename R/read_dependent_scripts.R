@@ -17,3 +17,7 @@ source('./R/plot_fun_ts.R')
 source('./R/summarize_functions.R')
 source('./R/obs_exp_plot.R')
 source('./R/RR_plot.R')
+
+source('./R/call_inla.R')
+
+source('./R/mod.fit.plots.R')
