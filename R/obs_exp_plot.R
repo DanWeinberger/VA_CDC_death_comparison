@@ -1,11 +1,11 @@
-obs_exp_plot <- function(ds, xvar, yvar, groupvar, colvar, datemin='2014-01-01', ylab1="Number of all-cause deaths"){
+obs_exp_plot <- function(ds, xvar, yvar, groupvar, colvar, datemin='2014-01-01', ylab1="Incidence of all-cause deaths"){
   ds %>%
     mutate('agec'=as.factor(agec)) %>%
     ggplot(aes_string(x=xvar, y=yvar , group=groupvar, col=colvar)) +
     geom_line() +
     #  geom_point()+
-    geom_line(aes(x=date, y=pred_median, group=agec), lty=2, col='black') +
-    geom_ribbon(aes(ymin=pred_lcl, ymax=pred_ucl), alpha=0.2, col='gray') +
+    geom_line(aes(x=date, y=pred_inc_median, group=agec), lty=2, col='black') +
+    geom_ribbon(aes(ymin=pred_inc_lcl, ymax=pred_inc_ucl), alpha=0.2, col='gray') +
     ylab(ylab1) +
     xlab("Date") +
     theme_classic() +

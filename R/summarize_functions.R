@@ -20,8 +20,14 @@ summarize_grps_quantiles <- function(ds){
                
                'excess_inc_median'=median(excess_inc),
                'excess_inc_lcl'=quantile(excess_inc, probs=0.025),
-               'exess_inc_ucl'= quantile(excess_inc, probs=0.975)
-               )
+               'exess_inc_ucl'= quantile(excess_inc, probs=0.975),
+               
+               'obs_inc'=median(obs_inc),
+               'pred_inc_median'=median(pred_inc),
+               'pred_inc_lcl'=quantile(pred_inc,probs=0.025),
+               'pred_inc_ucl'=quantile(pred_inc,probs=0.975),
+               
+                              )
   return(ds2)
 }
 
@@ -37,6 +43,10 @@ summarize_grps_sums <- function(ds){
     mutate('RR'=(N_deaths+0.5)/(pred+0.5),
            'pop'=popsum/n_times_agg,
            'excess'=(N_deaths - pred),
-           'excess_inc'=(N_deaths - pred)/(popsum/n_times_agg)*100000 ) 
+           'excess_inc'=(N_deaths - pred)/(popsum/n_times_agg)*100000  ,
+            'obs_inc'= N_deaths/(popsum/n_times_agg)*100000  ,
+            'pred_inc'= pred/(popsum/n_times_agg)*100000  
+    )
+
   return(ds1)
 }

@@ -144,7 +144,7 @@ out.ds <- call_inla(label='cdc', ds=ag3)
 
 ```{r}
 fit.plots <- mod.fit.plots()
-rr.plots <- rr.plots()
+rr.plot1 <- rr.plots()
 ```
 
 
@@ -156,8 +156,13 @@ fit.plots$p5
 ```
 
 ```{r, fig.width=8, fig.height=6}
-rr.plots$p2
-rr.plots$p4
-rr.plots$p6
+rr.plot1$p2
+rr.plot1$p4
+rr.plot1$p6
 
 ```
+
+```{r}
+
+```
+

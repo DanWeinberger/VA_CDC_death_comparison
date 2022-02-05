@@ -173,114 +173,37 @@ The key for ORIGIN is as follows:
 2 = Hispanic
 
 
-## Model
 
+## Fit Model
+
+
+Fit to VA and CDC data separately. This function saves to an rds file summary tables with the excess incidence and RR by group (excluding raw counts and denominators). It also outputs the full summary tables that can be used in plotting in the list out.ds
+```{r}
+out.ds <- call_inla(label='va', ds=v1)
+
+```
+
+```{r}
+fit.plots <- mod.fit.plots()
+rr.plot1 <- rr.plots()
+```
+
+
+```{r, fig.width=8, fig.height=6}
+fit.plots$p1
+fit.plots$p3
+fit.plots$p5
+
+```
+
+```{r, fig.width=8, fig.height=6}
+rr.plot1$p2
+rr.plot1$p4
+rr.plot1$p6
+
+```
 
 ```{r}
 
-mod1 <- pblapply(combine.data, inla_model3) #Maybe update this
-res1 <- bind_rows( mod1$va$preds_covars.m) #add VA data too
-res1$year <- year(res1$date)
 ```
 
-
-We can then take the results from the INLA and aggregate over different groups. For example, by age, by age/race, by age/region, by age/race/region:
-```{r}
-preds.age <- res1 %>%
-  group_by(source,agec, date, variable) %>%
-  summarize_grps_sums %>%
-  ungroup() %>%
-  group_by(source,agec, date) %>%
-  summarize_grps_quantiles
-
-preds.age_race <- res1 %>%
-  group_by(source,agec, race_recode, date, variable) %>%
-  summarize_grps_sums %>%
-  ungroup() %>%
-  group_by(source,agec,race_recode, date) %>%
-  summarize_grps_quantiles
-
-preds.age.region <- res1 %>%
-  group_by(source,agec,region, date, variable) %>%
-  summarize_grps_sums %>%
-  ungroup() %>%
-  group_by(source,agec,region, date) %>%
-  summarize_grps_quantiles
-
-preds.age.race.region <- res1 %>%
-  group_by(source,agec,region,race_recode, date, variable) %>%
-  summarize_grps_sums %>%
-  ungroup() %>%
-  group_by(source,agec,region,race_recode, date) %>%
-  summarize_grps_quantiles
-
-#Across multiple time points--this needs
-preds.age.yr <- res1 %>%
-  group_by(source,agec, year, variable) %>%
-  summarize_grps_sums %>%
-  ungroup() %>%
-  group_by(source,agec, year) %>%
-  summarize_grps_quantiles
-
-preds.age.yr <- res1 %>%
-  group_by(source, year, variable) %>%
-  summarize_grps_sums %>%
-  ungroup() %>%
-  group_by(source, year) %>%
-  summarize_grps_quantiles
-```
-
-
-```{r}
-#For creating standardized summaries of RR and incidence, start at most disaggregate level
-preds.age.race.region.sex.qtr <- res1[res1$year==2020,] %>%
-  group_by(source,agec,region,race_recode,sex, date, variable) %>%
-  summarize_grps_sums %>%
-  ungroup() %>%
-  group_by(source,agec,region,race_recode,sex, date) %>%
-  summarize_grps_quantiles
-```
-
-```{r, fig.width=8, fig.height=6}
-p1 <- obs_exp_plot(ds=preds.age[preds.age$source=='va',], xvar='date',yvar='N_deaths', groupvar='agec', colvar='agec')
-p1 + facet_wrap(~agec, scales='free')
-
-```
-
-```{r, fig.width=8, fig.height=6}
-p1 <- RR_plot(ds=preds.age[preds.age$source=='va',],  groupvar='agec', colvar='agec')
-p1 + facet_wrap(~agec, scales='free')
-
-```
-
-or by age and race
-
-```{r, fig.width=8, fig.height=6}
-
-p1 <- obs_exp_plot(ds=preds.age_race[preds.age_race$source=='va',], xvar='date',yvar='N_deaths', groupvar='agec', colvar='agec')
-
-p1 + facet_grid(agec~race_recode, scales='free')
-
-```
-
-
-```{r, fig.width=8, fig.height=6}
-
-p1 <- RR_plot(ds=preds.age_race[preds.age_race$source=='va',],  groupvar='agec', colvar='agec', datemin='2018-01-01') 
-
-
-p1 + facet_grid(agec~race_recode, scales='free')
-
-```
-Age and region 
-```{r, fig.width=8, fig.height=6}
-p1 <- obs_exp_plot(ds=preds.age.region[preds.age.region$source=='va',], xvar='date',yvar='N_deaths', groupvar='agec', colvar='agec')
-p1 + facet_grid(agec~region, scales='free')
-
-```
-
-```{r, fig.width=8, fig.height=6}
-p1 <- RR_plot(ds=preds.age.region[preds.age.region$source=='va',],  groupvar='agec', colvar='agec', datemin='2018-01-01') 
-p1 + facet_grid(agec~region, scales='free')
-
-```
