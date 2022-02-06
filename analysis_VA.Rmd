@@ -174,38 +174,24 @@ The key for ORIGIN is as follows:
 
 
 
-## Fit Model
-
-
 Fit to VA and CDC data separately. This function saves to an rds file summary tables with the excess incidence and RR by group (excluding raw counts and denominators). It also outputs the full summary tables that can be used in plotting in the list out.ds
 ```{r}
 out.ds <- call_inla(label='va', ds=v1)
 
 ```
 
-```{r}
-fit.plots <- mod.fit.plots()
-rr.plot1 <- rr.plots()
-saveRDS(fit.plots, './outputs/fit.plots.va.rds')
-saveRDS(rr.plot1, './outputs/rr.plots.va.rds')
-```
 
 
 ```{r, fig.width=8, fig.height=6}
-fit.plots$p1
-fit.plots$p3
-fit.plots$p5
+out.ds$fit.plots$p1
+out.ds$fit.plots$p3
+out.ds$fit.plots$p5
 
 ```
 
 ```{r, fig.width=8, fig.height=6}
-rr.plot1$p2
-rr.plot1$p4
-rr.plot1$p6
+out.ds$rr.plot1$p2
+out.ds$rr.plot1$p4
+out.ds$rr.plot1$p6
 
 ```
-
-```{r}
-
-```
-

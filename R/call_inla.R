@@ -80,10 +80,17 @@ call_inla <- function(label=c('cdc','va'), ds){
   preds.age.region.sex.out <- preds.age.region.sex %>%
     select(source, agec, region, sex, date, starts_with('RR'),starts_with('excess_inc'), starts_with('log_RR') )
   
-  save.list <- list('preds.age'=preds.age.out,'std.inc'=std.inc,'preds.age.race.region'=preds.age.race.region.out,'preds.age_race'=preds.age_race.out )
+  fit.plots <- mod.fit.plots(preds.age, preds.age.race.region,preds.age.region)
+  rr.plot1 <- rr.plots(preds.age, preds.age.race.region,preds.age.region)
+  saveRDS(fit.plots, paste0('./outputs/fit.plots.', label, '.rds'))
+  saveRDS(rr.plot1, paste0('./outputs/rr.plots.', label, '.rds')) 
+  
+  save.list <- list('fit.plots'=fit.plots, 'rr.plot1'=rr.plot1,'preds.age'=preds.age.out,'std.inc'=std.inc,'preds.age.race.region'=preds.age.race.region.out,'preds.age_race'=preds.age_race.out )
   saveRDS(save.list,paste0('./outputs/', 'summary_list_',label,'.rds'))
   
-  plot.ds.list =list('preds.age'=preds.age,'preds.age.region'=preds.age.region, 'preds.age.region.sex'=preds.age.region.sex,'preds.age_race'=preds.age_race, 'preds.age.race.region'=preds.age.race.region)
+ 
+  
+  plot.ds.list =list('fit.plots'=fit.plots, 'rr.plot1'=rr.plot1,'preds.age'=preds.age,'preds.age.region'=preds.age.region, 'preds.age.region.sex'=preds.age.region.sex,'preds.age_race'=preds.age_race, 'preds.age.race.region'=preds.age.race.region)
   
   return(plot.ds.list)
 }

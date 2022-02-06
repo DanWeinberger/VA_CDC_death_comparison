@@ -142,26 +142,19 @@ out.ds <- call_inla(label='cdc', ds=ag3)
 
 ```
 
-```{r}
-fit.plots <- mod.fit.plots()
-rr.plot1 <- rr.plots()
-saveRDS(fit.plots, './outputs/fit.plots.cdc.rds')
-saveRDS(rr.plot1, './outputs/rr.plots.cdc.rds')
-
-```
 
 
 ```{r, fig.width=8, fig.height=6}
-fit.plots$p1
-fit.plots$p3
-fit.plots$p5
+out.ds$fit.plots$p1
+out.ds$fit.plots$p3
+out.ds$fit.plots$p5
 
 ```
 
 ```{r, fig.width=8, fig.height=6}
-rr.plot1$p2
-rr.plot1$p4
-rr.plot1$p6
+out.ds$rr.plot1$p2
+out.ds$rr.plot1$p4
+out.ds$rr.plot1$p6
 
 ```
 

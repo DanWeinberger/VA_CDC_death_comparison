@@ -21,3 +21,4 @@ source('./R/RR_plot.R')
 source('./R/call_inla.R')
 
 source('./R/mod.fit.plots.R')
+source('./R/rr.plots.R')
