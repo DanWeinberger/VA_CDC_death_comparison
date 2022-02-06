@@ -116,4 +116,21 @@ htmlTable(excess.ds.c[excess.ds.c$date>='2020-01-01',c('date','cdc','va')],
           caption='Table 2: Excess Deaths per 100,000 population')
 ```
 
+```{r}
+
+excess.ds.age.region <- preds.age.race.region %>%
+  select(source, agec,region,sex,race_recode, date, starts_with('excess_inc')) %>%
+  mutate(excess_inc = paste0(round(excess_inc_median, 1) , ', (' ,round(excess_inc_lcl, 1) , ', ', round(excess_inc_ucl, 1) , ')'  )    )
+
+excess.ds.age.region.m <- melt(excess.ds.age.region[,c('source','agec','sex','race_recode','region','date','excess_inc')], id.vars=c('source','agec','date', 'sex', 'region','race_recode'))
+
+excess.ds.age.region.c <- dcast(excess.ds.age.region.m, agec+ sex+region + date +race_recode ~ source)
+
+htmlTable(excess.ds.age.region.c[excess.ds.age.region.c$date>='2020-01-01' & excess.ds.age.region.c$race_recode==1 & excess.ds.age.region.c$sex=='M' & excess.ds.age.region.c$region=='Northeast',c('date','cdc','va')],
+          n.rgroup=c(4,4,4,4,4), rgroup=unique(excess.ds.c$agec), rnames=F,
+          caption='Table 2: Excess Deaths per 100,000 population in the Northeast, White, males')
+
+
+```
+
 
