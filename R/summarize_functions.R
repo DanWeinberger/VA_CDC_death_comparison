@@ -20,7 +20,7 @@ summarize_grps_quantiles <- function(ds){
                
                'excess_inc_median'=median(excess_inc),
                'excess_inc_lcl'=quantile(excess_inc, probs=0.025),
-               'exess_inc_ucl'= quantile(excess_inc, probs=0.975),
+               'excess_inc_ucl'= quantile(excess_inc, probs=0.975),
                
                'obs_inc'=median(obs_inc),
                'pred_inc_median'=median(pred_inc),
