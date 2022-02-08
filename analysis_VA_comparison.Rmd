@@ -23,7 +23,7 @@ params:
   end.data.date: '2020-09-05'
 ---
 
-```{r, include = F}
+```{r setup, include = F}
 knitr::opts_chunk$set(
   collapse = TRUE,
   echo=F,
@@ -36,9 +36,6 @@ knitr::opts_chunk$set(
     nframes = 50)
 )
 
-```
-
-```{r setup}
 library(readxl)
 library(cdcfluview)
 library(reshape2)
@@ -78,29 +75,78 @@ source('./R/read_dependent_scripts.R')
 
 
 ```{r}
-
 cdc<- readRDS('./outputs/summary_list_cdc.rds')
-va<- readRDS('./outputs/summary_list_va.rds')
+va.full <- readRDS('./outputs/confidential/outputs_full/summary_list_va.rds')
+va.users <- readRDS('./outputs/confidential/outputs_users/summary_list_va.rds')
 
 ```
 
-```{r}
-preds.age <- bind_rows(cdc$preds.age, va$preds.age)
 
- p1 <- RR_plot(ds=preds.age ) + 
-    facet_wrap(~agec, scales='fixed')
+## Observed vs expected CDC 
+
+```{r}
+cdc$fit.plots$p1
+```
+
+## Observed vs expected VA (full)
+
+```{r}
+va.full$fit.plots$p1
+
+```
+## Observed vs expected VA (active enrollees)
+
+```{r}
+va.users$fit.plots$p1
+
+```
+
+
+## Changes by quarter in 2020 compared with expected values in the 3 populations 
+```{r, fig.width=8, fig.height=4}
+
+va.users$preds.age$source <- 'va.users'
+
+va.full$preds.age$source <- 'va.full'
+
+preds.age <- bind_rows(cdc$preds.age, va.full$preds.age, va.users$preds.age)
+
+ p1 <- RR_plot(ds=preds.age ,datemin='2020-01-01', add.CIs=F) + 
+    facet_grid(~agec, scales='fixed')
  
  p1
 ```
-```{r, fig.width=8, fg.height=12}
-preds.age.race.region <- bind_rows(cdc$preds.age.race.region, va$preds.age.race.region)
 
- p2 <- RR_plot(ds=preds.age.race.region[preds.age.race.region$race_recode==1 & preds.age.race.region$sex=='M',] ,datemin='2020-01-01') + 
+## Changes by quarter in 2020 compared with expected values in the 3 populations 
+By region and age
+
+```{r, fig.width=8, fg.height=12}
+
+va.users$preds.age.race.region$source <- 'va.users'
+va.full$preds.age.race.region$source <- 'va.full'
+
+preds.age.race.region <- bind_rows(cdc$preds.age.race.region, va.users$preds.age.race.region,va.full$preds.age.race.region)
+
+ p2 <- RR_plot(ds=preds.age.race.region[preds.age.race.region$race_recode==1 & preds.age.race.region$sex=='M',] ,datemin='2020-01-01',add.CIs=F) + 
     facet_grid(region~agec, scales='fixed')
  
  p2
 ```
 
+## Population-standardized excess incidence
+
+```{r}
+va.users$std.inc$source <- 'va.users'
+va.full$std.inc$source <- 'va.full'
+
+std.inc <- bind_rows(va.users$std.inc, va.full$std.inc, cdc$std.inc)
+std.inc$std_excess_inc <- round(std.inc$std_excess_inc, 1)
+
+std.inc.c <- dcast(std.inc, date~source, value.var='std_excess_inc')
+std.inc.c
+```
+
+## Excess deaths per 100,000 by age group
 
 ```{r}
 
@@ -111,10 +157,13 @@ excess.ds <- preds.age %>%
 excess.ds.m <- melt(excess.ds[,c('source','agec','date','excess_inc')], id.vars=c('source','agec','date'))
 excess.ds.c <- dcast(excess.ds.m, agec+ date ~ source)
 
-htmlTable(excess.ds.c[excess.ds.c$date>='2020-01-01',c('date','cdc','va')],
+htmlTable(excess.ds.c[excess.ds.c$date>='2020-01-01',c('date','cdc','va.full','va.users')],
           n.rgroup=c(4,4,4,4,4), rgroup=unique(excess.ds.c$agec), rnames=F,
           caption='Table 2: Excess Deaths per 100,000 population')
 ```
+
+
+## Excess deaths per 100,000 in the Northeast among white males
 
 ```{r}
 
@@ -126,7 +175,7 @@ excess.ds.age.region.m <- melt(excess.ds.age.region[,c('source','agec','sex','ra
 
 excess.ds.age.region.c <- dcast(excess.ds.age.region.m, agec+ sex+region + date +race_recode ~ source)
 
-htmlTable(excess.ds.age.region.c[excess.ds.age.region.c$date>='2020-01-01' & excess.ds.age.region.c$race_recode==1 & excess.ds.age.region.c$sex=='M' & excess.ds.age.region.c$region=='Northeast',c('date','cdc','va')],
+htmlTable(excess.ds.age.region.c[excess.ds.age.region.c$date>='2020-01-01' & excess.ds.age.region.c$race_recode==1 & excess.ds.age.region.c$sex=='M' & excess.ds.age.region.c$region=='Northeast',c('date','cdc','va.full','va.users')],
           n.rgroup=c(4,4,4,4,4), rgroup=unique(excess.ds.c$agec), rnames=F,
           caption='Table 2: Excess Deaths per 100,000 population in the Northeast, White, males')
 

@@ -1,10 +1,9 @@
-RR_plot <- function(ds, xvar,  groupvar, colvar, datemin='2014-01-01', ylab1="Rate Ratio"){
-  ds %>%
+RR_plot <- function(ds, xvar,  groupvar, colvar, add.CIs=T,datemin='2014-01-01', ylab1="Rate Ratio"){
+  p1 <- ds %>%
     mutate('agec'=as.factor(agec)) %>%
     ggplot(aes(x=date, y=RR_median , group=source, col=source)) +
     geom_line() +
     #  geom_point()+
-    geom_ribbon(aes(ymin=RR_lcl, ymax=RR_ucl), alpha=0.2, col='gray') +
     ylab(ylab1) +
     xlab("Date") +
     theme_classic() +
@@ -16,4 +15,10 @@ RR_plot <- function(ds, xvar,  groupvar, colvar, datemin='2014-01-01', ylab1="Ra
         xlim(as.Date(datemin), as.Date('2020-12-31')) +
     ylim(0.5,2)+
     theme(panel.spacing= unit(2,'lines') , axis.text.x=element_text(angle=90)) 
+
+  if(add.CIs==T){
+   p1 +  geom_ribbon(aes(ymin=RR_lcl, ymax=RR_ucl), alpha=0.2, col='gray') 
+      
+  }  
+  return(p1)
 }
