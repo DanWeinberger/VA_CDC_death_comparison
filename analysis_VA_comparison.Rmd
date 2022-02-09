@@ -88,6 +88,11 @@ va.users <- readRDS('./outputs/confidential/outputs_users/summary_list_va.rds')
 cdc$fit.plots$p1
 ```
 
+```{r}
+plot(cdc$preds.age$date, cdc$preds.age$pop)
+```
+
+
 ## Observed vs expected VA (full)
 
 ```{r}
@@ -98,6 +103,13 @@ va.full$fit.plots$p1
 
 ```{r}
 va.users$fit.plots$p1
+
+```
+
+
+```{r}
+va.full$fit.plots$p5
+cdc$fit.plots$p5
 
 ```
 
