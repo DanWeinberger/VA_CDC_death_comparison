@@ -81,6 +81,23 @@ va.users <- readRDS('./outputs/confidential/outputs_users/summary_list_va.rds')
 
 ```
 
+```{r}
+plot(va.users$preds.age_race$excess_inc_median)
+
+ggplot(va.users$preds.age_race, aes(x=date, y=excess_inc_median)) +
+  geom_line() +
+  theme_classic()+
+  facet_grid(agec~race_recode, scales='free')
+
+plot(va.users$preds.age_race$excess_inc_median)
+
+ggplot(cdc$preds.age_race, aes(x=date, y=pop)) +
+  geom_line() +
+  theme_classic()+
+  facet_wrap(agec~race_recode, scales='free')
+```
+
+
 
 ## Observed vs expected CDC 
 
