@@ -72,13 +72,13 @@ call_inla <- function(label=c('cdc','va'), ds){
     select(source, agec, date, starts_with('RR'),starts_with('excess_inc'), starts_with('log_RR') )
   
   preds.age.race.region.out <- preds.age.race.region %>%
-    select(source, agec, region, race_recode, sex, date, starts_with('RR'),starts_with('excess_inc'), starts_with('log_RR') )
+    select(source, agec, region, race_recode, sex, date,pop, starts_with('RR'),starts_with('excess_inc'), starts_with('log_RR') )
   
   preds.age_race.out <- preds.age_race %>% 
-    select(source, agec, race_recode, date, starts_with('RR'),starts_with('excess_inc'), starts_with('log_RR') )
+    select(source, agec, race_recode, date, pop, starts_with('RR'),starts_with('excess_inc'), starts_with('log_RR') )
   
   preds.age.region.sex.out <- preds.age.region.sex %>%
-    select(source, agec, region, sex, date, starts_with('RR'),starts_with('excess_inc'), starts_with('log_RR') )
+    select(source, agec, region, sex, date, pop, starts_with('RR'),starts_with('excess_inc'), starts_with('log_RR') )
   
   fit.plots <- mod.fit.plots(preds.age, preds.age.race.region,preds.age.region)
   rr.plot1 <- rr.plots(preds.age, preds.age.race.region,preds.age.region)

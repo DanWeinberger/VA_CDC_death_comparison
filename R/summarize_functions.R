@@ -26,6 +26,7 @@ summarize_grps_quantiles <- function(ds){
                'pred_inc_median'=median(pred_inc),
                'pred_inc_lcl'=quantile(pred_inc,probs=0.025),
                'pred_inc_ucl'=quantile(pred_inc,probs=0.975),
+               'pop'= median(pop)
                
                               )
   return(ds2)
