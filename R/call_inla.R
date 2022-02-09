@@ -69,7 +69,7 @@ call_inla <- function(label=c('cdc','va'), ds){
   
   #Export summary measures
   preds.age.out <- preds.age %>%
-    select(source, agec, date, starts_with('RR'),starts_with('excess_inc'), starts_with('log_RR') )
+    select(source, agec, date, pop, starts_with('RR'),starts_with('excess_inc'), starts_with('log_RR') )
   
   preds.age.race.region.out <- preds.age.race.region %>%
     select(source, agec, region, race_recode, sex, date,pop, starts_with('RR'),starts_with('excess_inc'), starts_with('log_RR') )
