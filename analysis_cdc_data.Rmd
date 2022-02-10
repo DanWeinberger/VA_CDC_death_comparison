@@ -160,5 +160,32 @@ out.ds$rr.plot1$p6
 
 ```{r}
 
+e1 <- out.ds$preds.age.region.sex[out.ds$preds.age.region.sex$region=='Northeast',]
+
+ggplot(e1[e1$date>='2020-01-01',], aes(x=date, y=excess_inc_median, group=sex, color=sex)) +
+  geom_line() +
+  theme_classic() +
+  facet_wrap(~agec , scales='free')
+
+e2 <- out.ds$preds.age.region.sex[out.ds$preds.age.region.sex$region=='South',]
+
+ggplot(e2[e2$date>='2020-01-01',], aes(x=date, y=excess_inc_median, group=sex, color=sex)) +
+  geom_line() +
+  theme_classic() +
+  facet_wrap(~agec , scales='free')
+
+e3 <- out.ds$preds.age.region.sex[out.ds$preds.age.region.sex$region=='West',]
+
+ggplot(e3[e3$date>='2020-01-01',], aes(x=date, y=excess_inc_median, group=sex, color=sex)) +
+  geom_line() +
+  theme_classic() +
+  facet_wrap(~agec , scales='free')
+
+e4 <- out.ds$preds.age.region.sex[out.ds$preds.age.region.sex$region=='Midwest',]
+
+ggplot(e4[e4$date>='2020-01-01',], aes(x=date, y=excess_inc_median, group=sex, color=sex)) +
+  geom_line() +
+  theme_classic() +
+  facet_wrap(~agec , scales='free')
 ```
 

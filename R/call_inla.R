@@ -12,6 +12,35 @@ call_inla <- function(label=c('cdc','va'), ds){
   
   
   #We can then take the results from the INLA and aggregate over different groups. For example, by age, by age/race, by age/region, by age/race/region:
+
+  preds.age.sex.overall <- res1[res1$date>='2020-04-01',] %>%
+    group_by(source,agec, sex, variable) %>%
+    summarize_grps_sums %>%
+    ungroup() %>%
+    group_by(source,agec,sex) %>%
+    summarize_grps_quantiles
+  
+  preds.age.overall <- res1[res1$date>='2020-04-01',] %>%
+    group_by(source,agec,  variable) %>%
+    summarize_grps_sums %>%
+    ungroup() %>%
+    group_by(source,agec) %>%
+    summarize_grps_quantiles
+  
+  preds.overall <- res1[res1$date>='2020-04-01',] %>%
+    group_by(source,  variable) %>%
+    summarize_grps_sums %>%
+    ungroup() %>%
+    group_by(source) %>%
+    summarize_grps_quantiles
+   
+  preds.date <- res1 %>%
+    group_by(source, date, variable) %>%
+    summarize_grps_sums %>%
+    ungroup() %>%
+    group_by(source, date) %>%
+    summarize_grps_quantiles
+  # select(source, agec ,date, starts_with('RR') , starts_with('excess'), starts_with('pred'), starts_with('log_RR'))
   
   preds.age <- res1 %>%
     group_by(source,agec, date, variable) %>%
@@ -85,7 +114,7 @@ call_inla <- function(label=c('cdc','va'), ds){
   saveRDS(fit.plots, paste0('./outputs/fit.plots.', label, '.rds'))
   saveRDS(rr.plot1, paste0('./outputs/rr.plots.', label, '.rds')) 
   
-  save.list <- list('fit.plots'=fit.plots, 'rr.plot1'=rr.plot1,'preds.age'=preds.age.out,'std.inc'=std.inc,'preds.age.race.region'=preds.age.race.region.out,'preds.age_race'=preds.age_race.out )
+  save.list <- list('fit.plots'=fit.plots, 'rr.plot1'=rr.plot1,'preds.age'=preds.age.out,'std.inc'=std.inc,'preds.age.race.region'=preds.age.race.region.out,'preds.age_race'=preds.age_race.out, 'preds.date'= preds.date,'preds.overall'=preds.overall,'preds.age.overall'=preds.age.overall,'preds.age.sex.overall'=preds.age.sex.overall)
   saveRDS(save.list,paste0('./outputs/', 'summary_list_',label,'.rds'))
   
  
