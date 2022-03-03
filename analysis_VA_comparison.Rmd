@@ -76,7 +76,9 @@ source('./R/read_dependent_scripts.R')
 
 ```{r}
 cdc<- readRDS('./outputs/summary_list_cdc.rds')
-va.full <- readRDS('./outputs/confidential/outputs_full/summary_list_va.rds')
+
+va.full <- readRDS('./outputs/confidential/outputs_all/summary_list_va.rds')
+
 va.users <- readRDS('./outputs/confidential/outputs_users/summary_list_va.rds')
 
 ```
@@ -101,7 +103,7 @@ ggplot(cdc$preds.age_race, aes(x=date, y=pop)) +
 
 ## Observed vs expected CDC 
 
-```{r}
+```{r, fig.width=8, fig.heigh=4}
 cdc$fit.plots$p1
 ```
 
@@ -112,14 +114,39 @@ plot(cdc$preds.age$date, cdc$preds.age$pop)
 
 ## Observed vs expected VA (full)
 
-```{r}
+```{r, fig.width=8, fig.height=4}
 va.full$fit.plots$p1
 
 ```
 ## Observed vs expected VA (active enrollees)
 
-```{r}
+```{r fig.width=8, fig.height=4}
 va.users$fit.plots$p1
+
+```
+Population size for VA users over time by age
+
+```{r}
+ggplot(va.users$preds.age, aes(x=date, y=pop, group=agec, col=agec)) +
+  theme_classic() +
+  geom_line()
+
+```
+Population size by race and age
+```{r, fig.width=6, fig.height=4}
+ggplot(va.users$preds.age_race, aes(x=date, y=pop, group=agec, col=agec)) +
+  theme_classic() +
+  geom_line() +
+  ylim(0,NA) +
+  facet_wrap(~race_recode, scales='fixed')
+
+```
+
+
+
+```{r, fig.width=8, fig.height=8}
+va.users$fit.plots$p3 #white males
+va.users$fit.plots$p5 #all people >25 years
 
 ```
 
@@ -198,9 +225,11 @@ htmlTable(excess.ds.c[excess.ds.c$date>='2020-01-01',c('date','cdc','va.full','v
 
 excess.ds.age.region <- preds.age.race.region %>%
   select(source, agec,region,sex,race_recode, date, starts_with('excess_inc')) %>%
-  mutate(excess_inc = paste0(round(excess_inc_median, 1) , ', (' ,round(excess_inc_lcl, 1) , ', ', round(excess_inc_ucl, 1) , ')'  )    )
+  mutate(excess_inc = paste0(round(excess_inc_median, -1) , ', (' ,round(excess_inc_lcl, -1) , ', ', round(excess_inc_ucl, -1) , ')'  )    )
 
 excess.ds.age.region.m <- melt(excess.ds.age.region[,c('source','agec','sex','race_recode','region','date','excess_inc')], id.vars=c('source','agec','date', 'sex', 'region','race_recode'))
+
+
 
 excess.ds.age.region.c <- dcast(excess.ds.age.region.m, agec+ sex+region + date +race_recode ~ source)
 
