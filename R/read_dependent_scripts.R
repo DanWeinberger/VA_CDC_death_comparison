@@ -5,6 +5,7 @@ source('./R/plot_ts_region.R')
 source('./R/run_if_expired.R')
 source('./R/gen_pred_interval_inla.R')
 source('./R/gen_pred_interval_inla_ridge.R')
+source('./R/gen_pred_interval_inla_ridge_ar1.R')
 
 source('./R/popsize_formatting.R')
 source('./R/cdc_data_setup_multilevel.R')

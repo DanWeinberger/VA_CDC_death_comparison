@@ -41,13 +41,19 @@ df1$hisp_recode[df1$hispanic >=200 & df1$hispanic <= 299] <- 1
 # df1$race_ethnicity[ df1$race %in% c('03') & df1$hisp_recode != 1]  <- 5 #American Indian
 # #table(df1$race_ethnicity)
 
-df1$race_recode <- 999
 df1$race_recode[df1$race %in% c('01') ] <- 1 #white, non-Hospanic
 df1$race_recode[df1$race %in% c('02') ]  <- 2 #black, non-Hispanic
 df1$race_recode[ df1$race %in% c('03') ]  <- 3 #American Indian
 df1$race_recode[ df1$race %in% c('04','05','18','28','48' ,'68','78')]  <- 4 #Asian
 df1$race_recode[ df1$race %in% c( '06','07','38','58')]  <- 5 #Hawaain/Pac Is
+df1$race_recode <- 999
 
+#RACE RECODE:
+# 1=White
+# 2=Black
+# 3=American Indian
+# 4=Asian
+# 5=Hawaiian/Pacific Islanders
 
 df1$qtr <- NA
 df1$qtr[df1$month %in% c('01','02','03')] <- 1
