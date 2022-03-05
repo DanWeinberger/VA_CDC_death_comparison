@@ -1,7 +1,7 @@
 gen_pred_interval_inla_ridge_ar1 <- function(inla_obj, X,Za,Zb, Zc,covar.df, mod.mat, source,log.offset1=NULL){
   
-  nrep1=400
-  nrep2=3
+  nrep1=1000
+  nrep2=1
   
   r.samples = inla.posterior.sample(nrep1, inla_obj)
   
