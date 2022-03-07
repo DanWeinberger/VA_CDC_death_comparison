@@ -32,7 +32,7 @@ gen_pred_interval_inla_ridge_ar1 <- function(inla_obj, X,Za,Zb, Zc,covar.df, mod
   ar1.obs <- as.data.frame(ar1.obs)
   names(ar1.obs) <- paste0('sampleAR', 1:ncol(ar1.obs))
     
-  ar1.obs$date <- sort(unique(ds$date))
+  ar1.obs$date <- sort(unique(covar.df$date))
 
 
   pred.names <- c(X.names,Za.names,Zb.names,Zc.names)
