@@ -56,7 +56,7 @@ gen_pred_interval_inla_ridge_ar1 <- function(inla_obj, X,Za,Zb, Zc,covar.df, mod
   
   covar.ar <- covar.ar[,grep('sampleAR', names(covar.ar)) ]
   
-  sample.ds2 <- sample.ds1 + covar.ar
+  sample.ds2 <- sample.ds1 *exp( covar.ar)
   
   mod.family <- inla_obj$.args$family
   
