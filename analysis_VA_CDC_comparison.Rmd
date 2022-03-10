@@ -3,17 +3,17 @@ title: "Compare excess death in va and CDC data"
 author: "Dan Weinberger"
 date: "10/29/2020"
 output:
-  pdf_document: 
-    keep_tex:  true
-  word_document:
-    toc: yes
-    toc_depth: '2'
   html_document:
     df_print: paged
     html_document: null
     toc: yes
     toc_depth: 2
     toc_float: yes
+  word_document:
+    toc: yes
+    toc_depth: '2'
+  pdf_document: 
+    keep_tex:  true
 params:
   agg.level: 'state'
   n.days.filter: 20
@@ -37,7 +37,6 @@ knitr::opts_chunk$set(
 )
 
 library(readxl)
-library(cdcfluview)
 library(reshape2)
 library(ggplot2)
 library(lubridate)
@@ -87,6 +86,32 @@ va.full <- readRDS('./outputs/confidential/outputs_all/summary_list_va.rds')
 
 va.users <- readRDS('./outputs/confidential/outputs_users/summary_list_va.rds')
 
+```
+
+
+## Observed and expected incidence by age
+
+```{r}
+
+ va.users$preds.age.overall$source <- 'va.users'
+ va.full$preds.age.overall$source <- 'va.full'
+
+all.inc <- bind_rows( va.full$preds.age.overall, va.users$preds.age.overall, cdc$preds.age.overall)
+
+ggplot(all.inc, aes(x=agec, y=log(obs_inc),color=source))+
+  geom_point() +
+  theme_classic()+
+  geom_point(data=all.inc, aes(x=agec, y=log(obs_inc-excess_inc_median),color=source), pch=1, position=position_nudge(x=-0.1))+
+  ggtitle('Incidence in 2020 (open symbol=expected)')+
+  ylab('Log(Incidence)')
+
+```
+
+Excess incidence vs expected incidence
+Each color is a different age, each symbol a different group
+Crosses are VA users
+```{r}
+plot(log( all.inc$pred_inc_median),log(all.inc$excess_inc_median), col=as.factor(all.inc$agec), pch=as.numeric(as.factor(all.inc$source)))
 ```
 
 ```{r, fig.width=8, fig.height=8}
@@ -153,6 +178,7 @@ ggplot(va.users$preds.age, aes(x=date, y=pop, group=agec, col=agec)) +
   geom_line()
 
 ```
+
 Population size by race and age
 
 ```{r, fig.width=6, fig.height=4}
@@ -164,17 +190,23 @@ ggplot(va.users$preds.age_race, aes(x=date, y=pop, group=agec, col=agec)) +
 
 ```
 
-Observed vs expected 
+Observed vs expected (VA users)
 
 ```{r, fig.width=8, fig.height=8}
 va.users$fit.plots$p3 +ggtitle('White males') #white males
 va.users$fit.plots$p5 +ggtitle('All adults') #all people >25 years
 
 ```
-
+Observed vs expected (VA full)
 
 ```{r, fig.width=8, fig.height=8}
 va.full$fit.plots$p5
+
+```
+
+Observed vs expected (CDC)
+
+```{r}
 cdc$fit.plots$p5
 
 ```
@@ -263,5 +295,7 @@ htmlTable(excess.ds.age.region.c[excess.ds.age.region.c$date>='2020-01-01' & exc
 
 
 ```
+
+
 
 
