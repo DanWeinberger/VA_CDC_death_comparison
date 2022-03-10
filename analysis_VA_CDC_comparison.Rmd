@@ -124,6 +124,7 @@ ggplot(cdc$preds.age_race, aes(x=date, y=pop)) +
 ```{r, fig.width=8, fig.heigh=4}
 cdc$fit.plots$p1
 ```
+
 CDC population 
 ```{r}
 plot(cdc$preds.age$date, cdc$preds.age$pop)
