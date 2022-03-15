@@ -1,7 +1,7 @@
 ---
-title: "Compare excess death in va and CDC data"
+title: "Compare excess death in VA and CDC data"
 author: "Dan Weinberger"
-date: "10/29/2020"
+date: "3/15/2022"
 output:
   html_document:
     df_print: paged
@@ -37,7 +37,6 @@ knitr::opts_chunk$set(
 )
 
 library(readxl)
-library(cdcfluview)
 library(reshape2)
 library(ggplot2)
 library(lubridate)
@@ -73,6 +72,12 @@ source('./R/read_dependent_scripts.R')
 
 ```
 
+RACE RECODE:
+ 1=White
+ 2=Black
+ 3=American Indian
+ 4=Asian
+ 5=Hawaiian/Pacific Islanders
 
 ```{r}
 cdc<- readRDS('./outputs/summary_list_cdc.rds')
@@ -83,20 +88,58 @@ va.users <- readRDS('./outputs/confidential/outputs_users/summary_list_va.rds')
 
 ```
 
+
+## Observed and expected incidence by age
+
 ```{r}
-plot(va.users$preds.age_race$excess_inc_median)
+
+ va.users$preds.age.overall$source <- 'va.users'
+ va.full$preds.age.overall$source <- 'va.full'
+
+all.inc <- bind_rows( va.full$preds.age.overall, va.users$preds.age.overall, cdc$preds.age.overall)
+
+ggplot(all.inc, aes(x=agec, y=log(obs_inc),color=source))+
+  geom_point() +
+  theme_classic()+
+  geom_point(data=all.inc, aes(x=agec, y=log(obs_inc-excess_inc_median),color=source), pch=1, position=position_nudge(x=-0.1))+
+  ggtitle('Incidence in 2020 (open symbol=expected)')+
+  ylab('Log(Incidence)')
+
+```
+
+Excess incidence vs expected incidence
+Each color is a different age, each symbol a different group
+Crosses are VA users
+```{r}
+plot(log( all.inc$pred_inc_median),log(all.inc$excess_inc_median), col=as.factor(all.inc$agec), pch=as.numeric(as.factor(all.inc$source)))
+```
+
+```{r, fig.width=8, fig.height=8}
+#plot(va.users$preds.age_race$excess_inc_median)
 
 ggplot(va.users$preds.age_race, aes(x=date, y=excess_inc_median)) +
   geom_line() +
+  geom_hline(yintercept=0)+
   theme_classic()+
+  ggtitle('Excess Incidence (cases/100,000) by race and age')+
   facet_grid(agec~race_recode, scales='free')
+  
 
-plot(va.users$preds.age_race$excess_inc_median)
+ggplot(va.users$preds.age_race, aes(x=date, y=excess_inc_median*pop)) +
+  geom_line() +
+  geom_hline(yintercept=0)+
+  theme_classic()+
+  ggtitle('Excess Cases (N) by race and age')+
+  facet_grid(agec~race_recode, scales='free')
+  
+
+#plot(va.users$preds.age_race$excess_inc_median)
 
 ggplot(cdc$preds.age_race, aes(x=date, y=pop)) +
   geom_line() +
   theme_classic()+
-  facet_wrap(agec~race_recode, scales='free')
+  facet_wrap(agec~race_recode, scales='free')+
+  ggtitle('Population size by age and race')
 ```
 
 
@@ -107,6 +150,7 @@ ggplot(cdc$preds.age_race, aes(x=date, y=pop)) +
 cdc$fit.plots$p1
 ```
 
+CDC population 
 ```{r}
 plot(cdc$preds.age$date, cdc$preds.age$pop)
 ```
@@ -118,12 +162,14 @@ plot(cdc$preds.age$date, cdc$preds.age$pop)
 va.full$fit.plots$p1
 
 ```
+
 ## Observed vs expected VA (active enrollees)
 
 ```{r fig.width=8, fig.height=4}
 va.users$fit.plots$p1
 
 ```
+
 Population size for VA users over time by age
 
 ```{r}
@@ -132,33 +178,42 @@ ggplot(va.users$preds.age, aes(x=date, y=pop, group=agec, col=agec)) +
   geom_line()
 
 ```
+
 Population size by race and age
+
 ```{r, fig.width=6, fig.height=4}
 ggplot(va.users$preds.age_race, aes(x=date, y=pop, group=agec, col=agec)) +
   theme_classic() +
   geom_line() +
   ylim(0,NA) +
-  facet_wrap(~race_recode, scales='fixed')
+  facet_wrap(~race_recode, scales='free')
 
 ```
 
-
+Observed vs expected (VA users)
 
 ```{r, fig.width=8, fig.height=8}
-va.users$fit.plots$p3 #white males
-va.users$fit.plots$p5 #all people >25 years
+va.users$fit.plots$p3 +ggtitle('White males') #white males
+va.users$fit.plots$p5 +ggtitle('All adults') #all people >25 years
+
+```
+Observed vs expected (VA full)
+
+```{r, fig.width=8, fig.height=8}
+va.full$fit.plots$p5
 
 ```
 
+Observed vs expected (CDC)
 
 ```{r}
-va.full$fit.plots$p5
 cdc$fit.plots$p5
 
 ```
 
 
 ## Changes by quarter in 2020 compared with expected values in the 3 populations 
+
 ```{r, fig.width=8, fig.height=4}
 
 va.users$preds.age$source <- 'va.users'
@@ -174,6 +229,7 @@ preds.age <- bind_rows(cdc$preds.age, va.full$preds.age, va.users$preds.age)
 ```
 
 ## Changes by quarter in 2020 compared with expected values in the 3 populations 
+
 By region and age
 
 ```{r, fig.width=8, fg.height=12}
@@ -187,6 +243,23 @@ preds.age.race.region <- bind_rows(cdc$preds.age.race.region, va.users$preds.age
     facet_grid(region~agec, scales='fixed')
  
  p2
+```
+Overall rate ratio (observed/expected) in the CDC, VA full and VA users
+```{r}
+test.list <- list(cdc, va.full, va.users)
+
+sapply(test.list,extract_func ,measure='RR', round.level=2, simplify='array')
+```
+
+Excess deaths/100,000 in the CDC, VA full and VA users
+```{r}
+sapply(test.list,extract_func ,measure='excess_inc', round.level=-1, simplify='array')
+```
+Number of excess deaths in CDC, VA full and VA users
+
+```{r}
+sapply(test.list,extract_func ,measure='excess', round.level=-2, simplify='array')
+
 ```
 
 ## Population-standardized excess incidence
@@ -225,7 +298,7 @@ htmlTable(excess.ds.c[excess.ds.c$date>='2020-01-01',c('date','cdc','va.full','v
 
 excess.ds.age.region <- preds.age.race.region %>%
   select(source, agec,region,sex,race_recode, date, starts_with('excess_inc')) %>%
-  mutate(excess_inc = paste0(round(excess_inc_median, -1) , ', (' ,round(excess_inc_lcl, -1) , ', ', round(excess_inc_ucl, -1) , ')'  )    )
+  mutate(excess_inc = paste0(round(excess_inc_median, 0) , ', (' ,round(excess_inc_lcl, 0) , ', ', round(excess_inc_ucl, 0) , ')'  )    )
 
 excess.ds.age.region.m <- melt(excess.ds.age.region[,c('source','agec','sex','race_recode','region','date','excess_inc')], id.vars=c('source','agec','date', 'sex', 'region','race_recode'))
 
@@ -239,5 +312,7 @@ htmlTable(excess.ds.age.region.c[excess.ds.age.region.c$date>='2020-01-01' & exc
 
 
 ```
+
+
 
 
