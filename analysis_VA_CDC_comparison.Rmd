@@ -1,7 +1,7 @@
 ---
-title: "Compare excess death in va and CDC data"
+title: "Compare excess death in VA and CDC data"
 author: "Dan Weinberger"
-date: "10/29/2020"
+date: "3/15/2022"
 output:
   html_document:
     df_print: paged
@@ -243,6 +243,23 @@ preds.age.race.region <- bind_rows(cdc$preds.age.race.region, va.users$preds.age
     facet_grid(region~agec, scales='fixed')
  
  p2
+```
+Overall rate ratio (observed/expected) in the CDC, VA full and VA users
+```{r}
+test.list <- list(cdc, va.full, va.users)
+
+sapply(test.list,extract_func ,measure='RR', round.level=2, simplify='array')
+```
+
+Excess deaths/100,000 in the CDC, VA full and VA users
+```{r}
+sapply(test.list,extract_func ,measure='excess_inc', round.level=-1, simplify='array')
+```
+Number of excess deaths in CDC, VA full and VA users
+
+```{r}
+sapply(test.list,extract_func ,measure='excess', round.level=-2, simplify='array')
+
 ```
 
 ## Population-standardized excess incidence

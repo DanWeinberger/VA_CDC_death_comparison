@@ -7,6 +7,8 @@ source('./R/gen_pred_interval_inla.R')
 source('./R/gen_pred_interval_inla_ridge.R')
 source('./R/gen_pred_interval_inla_ridge_ar1.R')
 
+source('./R/extract_func.R')
+
 source('./R/popsize_formatting.R')
 source('./R/cdc_data_setup_multilevel.R')
 source('./R/inla_model1.R')
