@@ -248,7 +248,12 @@ Overall rate ratio (observed/expected) in the CDC, VA full and VA users
 ```{r}
 test.list <- list(cdc, va.full, va.users)
 
-sapply(test.list,extract_func ,measure='RR', round.level=2, simplify='array')
+summary1 <- lapply(test.list,extract_func ,measure='RR', round.level=2)
+
+sapply(summary1, '[[','overall.results' , simplify='array')
+
+qtr.age.res <- sapply(summary1, '[[','age.qtr.results' , simplify=F)
+qtr.age.res[[3]]
 ```
 
 Excess deaths/100,000 in the CDC, VA full and VA users

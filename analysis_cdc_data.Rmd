@@ -97,6 +97,13 @@ ag3 <- ag3[ag3$agec !="Under 25 Years" ,]
   # 
   # saveRDS(summary.cdc,'./Data/grp_inc_cdc.R')
 
+ag3$pandemic_effect <- 0
+ag3$pandemic_effect[ag3$year>=2020 & ag3$qtr==1] <-1 
+ag3$pandemic_effect[ag3$year>=2020 & ag3$qtr==2]  <-2
+ag3$pandemic_effect[ag3$year>=2020 & ag3$qtr==3]  <-3
+ag3$pandemic_effect[ag3$year>=2020 & ag3$qtr==4]   <- 4
+ag3$pandemic_effect  <- as.factor(ag3$pandemic_effect )
+
 ```
 
 https://www.census.gov/programs-surveys/popest/technical-documentation/research/evaluation-estimates/2020-evaluation-estimates/2010s-state-detail.html
@@ -187,5 +194,10 @@ ggplot(e4[e4$date>='2020-01-01',], aes(x=date, y=excess_inc_median, group=sex, c
   geom_line() +
   theme_classic() +
   facet_wrap(~agec , scales='free')
+```
+## Alternative approach
+Fit to whole dataset, use dummy variables to capture post-vax change
+```{r}
+
 ```
 
