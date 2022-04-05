@@ -58,6 +58,7 @@ library(dplyr)
 library(RCurl)
 library(dplyr)
 library(tidyverse)
+library(gridExtra)
 library(gifski)
 library(gganimate)
 library(shiny)
@@ -88,6 +89,8 @@ va.users <- readRDS('./outputs/confidential/outputs_users/summary_list_va.rds')
 
 ```
 
+NOTE TO SELF: Alternative INLA model is fit to the entire dataset and explicitly estimates quarterly change from baseline. Use call_inla_full_ds.R and inla_model_full_ds1.R
+
 
 ## Observed and expected incidence by age
 
@@ -102,10 +105,45 @@ ggplot(all.inc, aes(x=agec, y=log(obs_inc),color=source))+
   geom_point() +
   theme_classic()+
   geom_point(data=all.inc, aes(x=agec, y=log(obs_inc-excess_inc_median),color=source), pch=1, position=position_nudge(x=-0.1))+
+  
+  geom_line(data=all.inc)
+  
   ggtitle('Incidence in 2020 (open symbol=expected)')+
   ylab('Log(Incidence)')
 
 ```
+
+```{r}
+all.inc2 <- bind_rows( va.full$preds.age.overall, va.users$preds.age.overall, cdc$preds.age.overall)
+
+all.inc2$exp_inc <- all.inc2$obs_inc-all.inc2$excess_inc_median
+
+all.inc2.m <- melt(all.inc2[,c('agec','source','exp_inc','obs_inc')], id.vars=c('agec','source'))
+
+all.inc2.m$agec2 <- NA
+all.inc2.m$agec2[all.inc2.m$agec=="25-44 years"] <- 1
+all.inc2.m$agec2[all.inc2.m$agec=="45-64 years"] <- 2
+all.inc2.m$agec2[all.inc2.m$agec=="65-74 years"] <- 3
+all.inc2.m$agec2[all.inc2.m$agec=="75-84 years"] <- 4
+all.inc2.m$agec2[all.inc2.m$agec=="85 years and older"] <- 5
+
+age.labs1 <- c("25-44 years","45-64 years" ,"65-74 years","75-84 years","85 years and older")
+all.inc2.m$agec2[all.inc2.m$variable=='exp_inc'] <- all.inc2.m$agec2[all.inc2.m$variable=='exp_inc'] - 0.1
+
+all.inc2.m$pair1 <- as.numeric(as.factor(paste(all.inc2.m$agec, all.inc2.m$source)))
+
+ggplot(all.inc2.m, aes(x=agec2, y=log(value),color=source, shape=variable))+
+  geom_point() +
+  scale_shape_manual(values=c(1,19))+
+  geom_line(aes(group = pair1))+
+
+  theme_classic()+
+ scale_x_discrete(labels= age.labs1)+
+
+  ggtitle('Incidence in 2020 (open symbol=expected)')+
+  ylab('Log(Incidence)')
+```
+
 
 Excess incidence vs expected incidence
 Each color is a different age, each symbol a different group
@@ -146,8 +184,18 @@ ggplot(cdc$preds.age_race, aes(x=date, y=pop)) +
 
 ## Observed vs expected CDC 
 
-```{r, fig.width=8, fig.heigh=4}
+```{r fig.width=8, fig.height=2}
 cdc$fit.plots$p1
+
+t2 <- cdc$fit.plots$p1
+
+t2.cdc <- t2 +
+  facet_wrap(~agec, scales='free', nrow=1)+
+    theme(legend.position="none")+
+  ylab('Deaths/100000')+
+    ggtitle('General US population')
+
+t2.cdc
 ```
 
 CDC population 
@@ -158,10 +206,25 @@ plot(cdc$preds.age$date, cdc$preds.age$pop)
 
 ## Observed vs expected VA (full)
 
-```{r, fig.width=8, fig.height=4}
+```{r, fig.width=8, fig.height=2}
 va.full$fit.plots$p1
 
+
+t1 <- va.full$fit.plots$p1
+
+t2.va.full<- t1 +
+  facet_wrap(~agec, scales='free', nrow=1)+
+    theme(legend.position="none")+
+  ylab('Deaths/100000')+
+  ggtitle('VA enrollees')
+t2.va.full
+
 ```
+
+```{r, fig.width=8, fig.height=4}
+grid.arrange(t2.cdc, t2.va.full)
+```
+
 
 ## Observed vs expected VA (active enrollees)
 
@@ -196,7 +259,10 @@ Observed vs expected (VA users)
 va.users$fit.plots$p3 +ggtitle('White males') #white males
 va.users$fit.plots$p5 +ggtitle('All adults') #all people >25 years
 
+
+
 ```
+
 Observed vs expected (VA full)
 
 ```{r, fig.width=8, fig.height=8}
@@ -226,6 +292,12 @@ preds.age <- bind_rows(cdc$preds.age, va.full$preds.age, va.users$preds.age)
     facet_grid(~agec, scales='fixed')
  
  p1
+ 
+ #average RR across ages; weight by pop
+ ave_rr <- preds.age[preds.age$date>='2020-01-01',] %>%
+   group_by(source, date) %>%
+   summarize(ave_RR= round(sum((RR_median*pop)/sum(pop)),2) )
+ ave_rr
 ```
 
 ## Changes by quarter in 2020 compared with expected values in the 3 populations 
