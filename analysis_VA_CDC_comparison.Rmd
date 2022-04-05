@@ -94,26 +94,14 @@ NOTE TO SELF: Alternative INLA model is fit to the entire dataset and explicitly
 
 ## Observed and expected incidence by age
 
-```{r}
+
+```{r, fig.width=7, fig.height=5}
 
  va.users$preds.age.overall$source <- 'va.users'
  va.full$preds.age.overall$source <- 'va.full'
 
 all.inc <- bind_rows( va.full$preds.age.overall, va.users$preds.age.overall, cdc$preds.age.overall)
 
-ggplot(all.inc, aes(x=agec, y=log(obs_inc),color=source))+
-  geom_point() +
-  theme_classic()+
-  geom_point(data=all.inc, aes(x=agec, y=log(obs_inc-excess_inc_median),color=source), pch=1, position=position_nudge(x=-0.1))+
-  
-  geom_line(data=all.inc)
-  
-  ggtitle('Incidence in 2020 (open symbol=expected)')+
-  ylab('Log(Incidence)')
-
-```
-
-```{r}
 all.inc2 <- bind_rows( va.full$preds.age.overall, va.users$preds.age.overall, cdc$preds.age.overall)
 
 all.inc2$exp_inc <- all.inc2$obs_inc-all.inc2$excess_inc_median
@@ -136,12 +124,13 @@ ggplot(all.inc2.m, aes(x=agec2, y=log(value),color=source, shape=variable))+
   geom_point() +
   scale_shape_manual(values=c(1,19))+
   geom_line(aes(group = pair1))+
-
+guides(shape = 'none')+ #To turn off shape legend
   theme_classic()+
- scale_x_discrete(labels= age.labs1)+
-
-  ggtitle('Incidence in 2020 (open symbol=expected)')+
-  ylab('Log(Incidence)')
+  scale_x_continuous( breaks = c(1:5),  label = age.labs1)+
+  #theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ggtitle('Observed vs expected Incidence in 2020 (open symbol=expected)')+
+  ylab('Log(Incidence)')+
+  xlab("")
 ```
 
 
