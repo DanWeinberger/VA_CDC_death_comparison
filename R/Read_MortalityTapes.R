@@ -127,8 +127,11 @@ df1[df1$rsv==1 & df1$agey<1,] %>%
 #AND OVERALL
 df1[df1$rsv==1 ,] %>%
   group_by(race_recode) %>%
-  summarize(ave_age=mean(agey), n=n())
+  summarize(ave_age=mean(agey), n=n()) 
 
+test1 <- as.data.frame(df1[df1$rsv==1 ,])
+hist(test1[ test1$race_recode==1 ,'agey'])
+hist(test1[ test1$race_recode==2 ,'agey'])
 
 #df1$date <- as.Date(paste(df1$year, df1$month, '01', sep='-'))
 
