@@ -41,12 +41,13 @@ df1$hisp_recode[df1$hispanic >=200 & df1$hispanic <= 299] <- 1
 # df1$race_ethnicity[ df1$race %in% c('03') & df1$hisp_recode != 1]  <- 5 #American Indian
 # #table(df1$race_ethnicity)
 
+df1$race_recode<- NA
 df1$race_recode[df1$race %in% c('01') ] <- 1 #white, non-Hospanic
 df1$race_recode[df1$race %in% c('02') ]  <- 2 #black, non-Hispanic
 df1$race_recode[ df1$race %in% c('03') ]  <- 3 #American Indian
 df1$race_recode[ df1$race %in% c('04','05','18','28','48' ,'68','78')]  <- 4 #Asian
 df1$race_recode[ df1$race %in% c( '06','07','38','58')]  <- 5 #Hawaain/Pac Is
-df1$race_recode <- 999
+df1$race_recode[is.na(df1$race_recode)] <- 999
 
 #RACE RECODE:
 # 1=White
@@ -106,14 +107,34 @@ df1$pneumo <- 1*(df1$pneumo>0) #convert to binary
 df1$ld <- rowSums(df.leg) #how many RSV codes re there per row?
 df1$ld <- 1*(df1$ld>0) #convert to binary
 
-
 df1$infant <- 0
 df1$infant[df1$age_detail_class==1 & df1$age_detail_class==1] <-1
 df1$infant[df1$age_detail_class %in% c(4,5,6) ] <-1
 
 df1$agey <- as.numeric(df1$age_detail_number)
+df1$agey[df1$age_detail_class==2] <- as.numeric(df1$age_detail_number[df1$age_detail_class==2] )/12
+df1$agey[df1$age_detail_class==4] <- as.numeric(df1$age_detail_number[df1$age_detail_class==4] )/365
+df1$agey[df1$age_detail_class==5] <- as.numeric(df1$age_detail_number[df1$age_detail_class==5] )/365/24
+df1$agey[df1$age_detail_class==6] <- as.numeric(df1$age_detail_number[df1$age_detail_class==6] )/365/24/60
+
+hist(df1$agey[df1$rsv==1 & df1$agey<1])
+
+#AGE DISTRIBUTION RSV DEATHS IN BABIES
+df1[df1$rsv==1 & df1$agey<1,] %>%
+  group_by(race_recode) %>%
+  summarize(ave_age=mean(agey), n=n())
+
+#AND OVERALL
+df1[df1$rsv==1 ,] %>%
+  group_by(race_recode) %>%
+  summarize(ave_age=mean(agey), n=n())
+
+
 #df1$date <- as.Date(paste(df1$year, df1$month, '01', sep='-'))
 
+
+test <- df1[df1$rsv==1 & df1$agey<5,'agey']
+ave.age.rsv <- df1[df1$rsv==1 & df1$agey<5,] %>%
 
 
 #looks at seasonality by cause

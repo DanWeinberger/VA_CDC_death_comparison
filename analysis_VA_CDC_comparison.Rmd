@@ -231,6 +231,10 @@ ggplot(va.users$preds.age, aes(x=date, y=pop, group=agec, col=agec)) +
 
 ```
 
+```{r}
+va.users$preds.age.overall$N_deaths/sum(va.users$preds.age.overall$N_deaths)
+```
+
 Population size by race and age
 
 ```{r, fig.width=6, fig.height=4}
