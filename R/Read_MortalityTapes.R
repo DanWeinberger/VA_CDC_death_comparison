@@ -137,7 +137,7 @@ hist(test1[ test1$race_recode==2 ,'agey'])
 
 
 test <- df1[df1$rsv==1 & df1$agey<5,'agey']
-ave.age.rsv <- df1[df1$rsv==1 & df1$agey<5,] %>%
+ave.age.rsv <- df1[df1$rsv==1 & df1$agey<5,] 
 
 
 #looks at seasonality by cause

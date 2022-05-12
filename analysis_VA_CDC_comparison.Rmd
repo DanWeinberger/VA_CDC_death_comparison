@@ -119,6 +119,10 @@ age.labs1 <- c("25-44 years","45-64 years" ,"65-74 years","75-84 years","85 year
 all.inc2.m$agec2[all.inc2.m$variable=='exp_inc'] <- all.inc2.m$agec2[all.inc2.m$variable=='exp_inc'] - 0.1
 
 all.inc2.m$pair1 <- as.numeric(as.factor(paste(all.inc2.m$agec, all.inc2.m$source)))
+```
+
+Plot
+```{r, fig.width=3, fig.height=2}
 
 ggplot(all.inc2.m, aes(x=agec2, y=log(value),color=source, shape=variable))+
   geom_point() +
@@ -128,9 +132,11 @@ guides(shape = 'none')+ #To turn off shape legend
   theme_classic()+
   scale_x_continuous( breaks = c(1:5),  label = age.labs1)+
   #theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  ggtitle('Observed vs expected Incidence in 2020 (open symbol=expected)')+
+ # ggtitle('Observed vs expected Incidence in 2020 (open symbol=expected)')+
   ylab('Log(Incidence)')+
-  xlab("")
+  ylim(0,NA)+
+  xlab("")+
+   scale_color_manual(labels = c("US", "VA enrollees", "VA active users"), values=c('#1b9e77','#d95f02','#7570b3'))
 ```
 
 
@@ -201,6 +207,11 @@ va.full$fit.plots$p1
 
 t1 <- va.full$fit.plots$p1
 
+range_act <- range(range(results$act), range(results$pred))
+
+dummy <- data.frame(pred = range_act, value = range_act,
+                    variable = "act", stringsAsFactors=FALSE)
+
 t2.va.full<- t1 +
   facet_wrap(~agec, scales='free', nrow=1)+
     theme(legend.position="none")+
@@ -210,9 +221,22 @@ t2.va.full
 
 ```
 
-```{r, fig.width=8, fig.height=4}
+```{r, fig.width=4, fig.height=2}
 grid.arrange(t2.cdc, t2.va.full)
 ```
+
+Set same axes for both
+```{r, fig.width=4, fig.height=2}
+blank_data <- data.frame(agec = c('25-44 years', '45-64 years', '65-74 years', '75-84 years', '85 years and older'),x=as.Date('2014-01-01'), y= c(70,450,1000,2000, 5000))
+
+t3.cdc <- t2.cdc + geom_blank(data = blank_data, aes(x = x, y = y))
+
+t3.va.full <- t2.va.full + geom_blank(data = blank_data, aes(x = x, y = y))
+
+grid.arrange(t3.cdc, t3.va.full)
+
+```
+
 
 
 ## Observed vs expected VA (active enrollees)
@@ -220,6 +244,20 @@ grid.arrange(t2.cdc, t2.va.full)
 ```{r fig.width=8, fig.height=4}
 va.users$fit.plots$p1
 
+t1 <- va.users$fit.plots$p1
+
+t2.va.users<- t1 +
+  facet_wrap(~agec, scales='free', nrow=1)+
+    theme(legend.position="none")+
+  ylab('Deaths/100000')+
+  ggtitle('VA active users')
+t2.va.users
+
+t3.va.users <- t2.va.users + geom_blank(data = blank_data, aes(x = x, y = y))
+```
+
+```{r, fig.width=4, fig.height=3}
+grid.arrange(t3.cdc, t3.va.full,t3.va.users)
 ```
 
 Population size for VA users over time by age
