@@ -4,7 +4,7 @@
 cdc_data_setup_multilevel <- function(){
   
   #RAW DATA READ USING READ_MortalityTapes.R
-  ag3 <- readRDS('./Data/Confidential/compiled_sex_age_race_qtr_region.rds')
+  ag3 <- readRDS('./Data/Confidential/compiled_sex_agec_race_qtr_region.rds')
   ag3$month <- NA
   ag3$month[ag3$qtr==1] <- 1
   ag3$month[ag3$qtr==2] <- 4
@@ -31,7 +31,13 @@ cdc_data_setup_multilevel <- function(){
   #   summarize( log.ave.case = log(mean(all_cause)  ))
   
   #ag3 <- merge( ag3, ag3.pre, by=c('state','age_group'))
-  ag3 <- merge(ag3, filled_pop2, by.x=c('sex','race_recode','agec','region', 'date'),by.y=c('sex','race','agec','region' ,'date'), all.x=T)
+  
+  filled_pop2 <- readRDS('./Data/pop_interpol.rds')
+  filled_pop2$sex <- as.factor(filled_pop2$sex)
+
+  filled_pop2$race_recode <- as.factor(filled_pop2$race_recode)
+  
+  ag3 <- merge(ag3, filled_pop2, by.x=c('sex','race_recode','agec','region', 'date'),by.y=c('sex','race_recode','agec','region' ,'date'), all.x=T)
   ag3$log_pop <- log(ag3$pop.interpol/100000)
 
   ag3$race_recode2 <- ag3$race_recode
@@ -47,32 +53,11 @@ cdc_data_setup_multilevel <- function(){
   ag3$region <- as.factor(ag3$region)
   
   ag3$agec <- as.factor(ag3$agec)
-  ag3$agec <- relevel(ag3$agec,'11') #set grp 11 as reference--this is highest incidence group and allow us to use N(0,1) priors for all covariates
+  ag3$agec <- relevel(ag3$agec,'85 years and older') #set grp 11 as reference--this is highest incidence group and allow us to use N(0,1) priors for all covariates
   
   ag3 <- ag3[!is.na(ag3$region),]
   
-  # Agec
-  # 01 ... Under 1 year (includes not stated infant ages)
-  # 02 ... 1 - 4 years
-  # 03 ... 5 - 14 years
-  # 04 ... 15 - 24 years
-  # 05 ... 25 - 34 years
-  # 06 ... 35 - 44 years
-  # 07 ... 45 - 54 years
-  # 08 ... 55 - 64 years
-  # 09 ... 65 - 74 years
-  # 10 ... 75 - 84 years
-  # 11 ... 85 years and over
-  # 12 ... Age not stated
-  
-  ag3$agec <- NA
-  ag3$agec[ag3$age_group %in% c('01','02','03','04')] <- "Under 25 Years"
-  ag3$agec[ag3$age_group %in% c('05','06')] <- "25-44 years"
-  ag3$agec[ag3$age_group %in% c('07','08')] <- "45-64 years"
-  ag3$agec[ag3$age_group %in% c('09')] <- "65-74 years"
-  ag3$agec[ag3$age_group %in% c('10')] <- "75-84 years"
-  ag3$agec[ag3$age_group %in% c('11')] <- '85 years and older'
-  
+
   ag3$subgroup_combo <- as.factor(paste(ag3$race_recode, ag3$agec, ag3$sex,ag3$region))
   
   ag3$source <- 'cdc'

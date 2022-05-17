@@ -68,6 +68,7 @@ set.seed(123)
 source('./R/read_dependent_scripts.R')
 
 std.pop.age.region.sex.race <- readRDS('./Data/std.pop.age.region.sex.race.rds')
+
 std.pop.age.sex.race <- readRDS('./Data/std.pop.age.sex.race.rds')
 
 ```
@@ -153,14 +154,15 @@ plot.fun(ds= v1[v1$sex=='F' &v1$race_recode=='1',], xvar='date', yvar='inc')
 plot.fun(ds= v1[v1$sex=='M' &v1$race_recode=='2',], xvar='date', yvar='inc')
 ```
 
-https://www.census.gov/programs-surveys/popest/technical-documentation/research/evaluation-estimates/2020-evaluation-estimates/2010s-state-detail.html
+https://www.cdc.gov/nchs/nvss/bridged_race/data_documentation.htm#vintage2020
 Race:
-1 = White Alone
-2 = Black or African American Alone
-3 = American Indian or Alaska Native Alone
-4 = Asian Alone
-5 = Native Hawaiian and Other Pacific Islander Alone
-6 = Two or more races
+RACE_RECODE: 
+1=Non-Hispanic White
+2=Non-Hispanic- Black
+3= Hispanic
+4=American Indian/Native Alaskan
+5= Asian/Pacific Island
+999=Missing
 
 Sex: 
 0 = Total

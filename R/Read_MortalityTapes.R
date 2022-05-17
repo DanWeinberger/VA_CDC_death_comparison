@@ -6,6 +6,7 @@ library(dplyr)
 library(reshape2)
 library(tidyr)
 library(ggplot2)
+library(cdlTools)
 
 #the geographic resolution missing from the public data
 # 
@@ -41,20 +42,29 @@ df1$hisp_recode[df1$hispanic >=200 & df1$hispanic <= 299] <- 1
 # df1$race_ethnicity[ df1$race %in% c('03') & df1$hisp_recode != 1]  <- 5 #American Indian
 # #table(df1$race_ethnicity)
 
+#RACE: 
+#1=Non-Hispanic White
+#2=Non-Hispanic- Black
+#3= Hispanic
+#4-American Indian/Native Alaskan
+#5: Asian/Pacific Island
+
 df1$race_recode<- NA
-df1$race_recode[df1$race %in% c('01') ] <- 1 #white, non-Hospanic
-df1$race_recode[df1$race %in% c('02') ]  <- 2 #black, non-Hispanic
-df1$race_recode[ df1$race %in% c('03') ]  <- 3 #American Indian
-df1$race_recode[ df1$race %in% c('04','05','18','28','48' ,'68','78')]  <- 4 #Asian
-df1$race_recode[ df1$race %in% c( '06','07','38','58')]  <- 5 #Hawaain/Pac Is
+df1$race_recode[df1$hisp_recode == 1] <- 3 #Hispanic
+
+df1$race_recode[df1$race %in% c('01') & df1$hisp_recode != 1] <- 1 #white, non-Hispanic
+df1$race_recode[df1$race %in% c('02') & df1$hisp_recode != 1 ]  <- 2 #black, non-Hispanic
+df1$race_recode[ df1$race %in% c('03') & df1$hisp_recode != 1 ]  <- 4 #American Indian
+df1$race_recode[ df1$race %in% c('04','05','18','28','48' ,'68','78') & df1$hisp_recode != 1]  <- 5 #Asian
+df1$race_recode[ df1$race %in% c( '06','07','38','58') & df1$hisp_recode != 1]  <- 5 #Hawaain/Pac Is
 df1$race_recode[is.na(df1$race_recode)] <- 999
 
 #RACE RECODE:
-# 1=White
-# 2=Black
-# 3=American Indian
-# 4=Asian
-# 5=Hawaiian/Pacific Islanders
+#1=Non-Hispanic White
+#2=Non-Hispanic- Black
+#3= Hispanic
+#4-American Indian/Native Alaskan
+#5: Asian/Pacific Island
 
 df1$qtr <- NA
 df1$qtr[df1$month %in% c('01','02','03')] <- 1
@@ -78,6 +88,24 @@ agg1 <- df1 %>%
   tidyr::complete(year,qtr, sex, agec,region,race_recode, fill=list(N_deaths=0)) #fills 0s
 
 saveRDS(agg1,'./Data/Confidential/compiled_sex_age_race_qtr_region.rds')
+
+df1$age_group <- df1$agec
+df1$agec <- NA
+df1$agec[df1$age_group %in% c('01','02','03','04')] <- "Under 25 Years"
+df1$agec[df1$age_group %in% c('05','06')] <- "25-44 years"
+df1$agec[df1$age_group %in% c('07','08')] <- "45-64 years"
+df1$agec[df1$age_group %in% c('09')] <- "65-74 years"
+df1$agec[df1$age_group %in% c('10')] <- "75-84 years"
+df1$agec[df1$age_group %in% c('11')] <- '85 years and older'
+
+agg2 <- df1 %>%
+  bind_rows() %>% 
+  group_by(year, qtr, sex, agec, region, race_recode) %>%
+  summarize(N_deaths = n())  %>%
+  ungroup  %>%
+  tidyr::complete(year,qtr, sex, agec,region,race_recode, fill=list(N_deaths=0)) #fills 0s
+
+saveRDS(agg2,'./Data/Confidential/compiled_sex_agec_race_qtr_region.rds')
 
 
 ## Cause specific deaths
@@ -261,3 +289,10 @@ ave.age.ldf <-  df1[df1$ld==1,] %>%
 # 250-259 … Latin American
 # 280-299 ... Other Hispanic
 # 996-999 ... Unknown
+
+#RACE_RECODE: 
+#1=Non-Hispanic White
+#2=Non-Hispanic- Black
+#3= Hispanic
+#4-American Indian/Native Alaskan
+#5: Asian/Pacific Island
