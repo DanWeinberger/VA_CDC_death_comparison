@@ -109,4 +109,16 @@ Format_US_Population <- function(){
   
   saveRDS(filled_pop2,'./Data/pop_interpol.rds')
 
+  std.pop1 <- filled_pop2[filled_pop2$date=='2020-01-01',]
+  names(std.pop1) <- c('agec','sex','race_recode','region','std.pop.date','std.pop')
+  
+  saveRDS(std.pop1,'./Data/std.pop.age.region.sex.race.rds')
+  
+  std.pop2 <- std.pop1 %>%
+    group_by(agec, sex, race_recode) %>%
+    summarize('std.pop'=sum(std.pop)) %>%
+    ungroup()
+  
+  saveRDS(std.pop2,'./Data/std.pop.age.sex.race.rds')
+  
   }

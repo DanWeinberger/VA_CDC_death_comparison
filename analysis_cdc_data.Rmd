@@ -210,14 +210,55 @@ ggplot(e4[e4$date>='2020-01-01',], aes(x=date, y=excess_inc_median, group=sex, c
   ylim(0,NA)
 ```
 
+RR by race in the Northeast, by sex
 ```{r}
-d1 <- out.ds$preds.age.race.region[out.ds$preds.age.race.region$region=='Northeast' & out.ds$preds.age.race.region$sex=='M',]
+d1 <- out.ds$preds.age.race.region[out.ds$preds.age.race.region$region=='Northeast' ,]
 
  ggplot(d1, aes(x=date, y=RR_median, group=race_recode, col=race_recode)) +
    geom_line()+
    theme_classic()+
-   facet_grid(~agec)
+   facet_grid(sex~agec)
 
 
 ```
+Sex differences by race and age in the northeast
+```{r, fig.width=4, fig.height=4}
+d1 <- out.ds$preds.age.race.region[out.ds$preds.age.race.region$region=='Northeast' ,]
+
+d1$agec <- as.character(d1$agec)
+
+d1$agec <- factor(d1$agec, levels=c('25-44 years', '45-64 years','65-74 years', '75-84 years', '85 years and older'))
+
+ ggplot(d1, aes(x=date, y=RR_median, group=sex, col=sex)) +
+   geom_line()+
+   theme_classic()+
+   facet_grid(race_recode~agec)
+
+  ggplot(d1, aes(x=date, y=excess_inc_median, group=sex, col=sex)) +
+   geom_line()+
+   theme_classic()+
+   facet_wrap(race_recode~agec, scales='free')
+
+```
+And in the South
+```{r, fig.width=4, fig.height=4}
+d1 <- out.ds$preds.age.race.region[out.ds$preds.age.race.region$region=='South' ,]
+
+d1$agec <- as.character(d1$agec)
+
+d1$agec <- factor(d1$agec, levels=c('25-44 years', '45-64 years','65-74 years', '75-84 years', '85 years and older'))
+
+ ggplot(d1, aes(x=date, y=RR_median, group=sex, col=sex)) +
+   geom_line()+
+   theme_classic()+
+   facet_grid(race_recode~agec)
+
+  ggplot(d1, aes(x=date, y=excess_inc_median, group=sex, col=sex)) +
+   geom_line()+
+   theme_classic()+
+   facet_wrap(race_recode~agec, scales='free')
+
+```
+
+
 
