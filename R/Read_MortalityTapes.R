@@ -7,7 +7,7 @@ library(reshape2)
 library(tidyr)
 library(ggplot2)
 library(cdlTools)
-
+library(table1)
 #the geographic resolution missing from the public data
 # 
 # 
@@ -97,6 +97,19 @@ df1$agec[df1$age_group %in% c('07','08')] <- "45-64 years"
 df1$agec[df1$age_group %in% c('09')] <- "65-74 years"
 df1$agec[df1$age_group %in% c('10')] <- "75-84 years"
 df1$agec[df1$age_group %in% c('11')] <- '85 years and older'
+
+#descriptive stats
+tabstats <- df1[df1$year<=2019,]
+tabstats$agey <- as.numeric(tabstats$age_detail_number)
+tabstats$agey[tabstats$agey ==999] <- NA
+tabstats$sex <- factor(tabstats$sex, c('M','F'))
+tabstats$region <- factor(tabstats$region, c('Northeast', 'South', 'Midwest','West'))
+tabstats$race_recode <- factor(tabstats$race_recode)
+tab1 <- table1( ~agey +sex + race_recode + region, data=tabstats )
+tab1
+tab1.df <- as.data.frame(tab1)
+write.csv(tab1.df,'./outputs/table1_US.csv')
+
 
 agg2 <- df1 %>%
   bind_rows() %>% 

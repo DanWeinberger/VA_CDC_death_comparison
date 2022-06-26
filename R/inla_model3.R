@@ -5,28 +5,11 @@ inla_model3 <- function(ds,prec.prior1=1){
   ds$t <- ds$year + ds$qtr/4 - 1/4 -2014
   ds$t <- ds$t / max(ds$t)
   
-  mod.mat1 <- model.matrix(~
-                             1 + time_scale + qtr2 + qtr3 +qtr4 +
-                             agec + race_recode + sex +  subgroup_combo +
-                             agec*(time_scale + qtr2 + qtr3 +qtr4) +
-                             race_recode*(time_scale + qtr2 + qtr3 +qtr4)+
-                             region*(time_scale + qtr2 + qtr3 +qtr4) , data=ds)
-  
-  form1.X <- as.formula(all_cause_pre ~
-                          1 + time_scale + qtr2 + qtr3 +qtr4 +
-                          agec + race_recode + sex +  subgroup_combo +
-                          agec*(time_scale + qtr2 + qtr3 +qtr4) +
-                          race_recode*(time_scale + qtr2 + qtr3 +qtr4)+
-                          region*(time_scale + qtr2 + qtr3 +qtr4)  +
-                          f(t, model='ar1')+
-                          offset(log_pop))
-  
+
   X <- model.matrix(~
                              1 + time_scale + qtr2 + qtr3 +qtr4 +
                              agec + race_recode + sex +  subgroup_combo , data=ds)
- # X <- as(mod.mat.X, "sparseMatrix")
 
-  
   #using the : instead of * ensure main effect is not included, just the interaction. this is needed bc we have a fixed effect already
   Za <- model.matrix(~
                              -1+
@@ -63,6 +46,6 @@ inla_model3 <- function(ds,prec.prior1=1){
   
   res1 <- gen_pred_interval_inla_ridge_ar1(inla_obj=mod.inla2, covar.df=ds,X=X,Za=Za,Zb=Zb, Zc=Zc, mod.mat=mod.mat.comb , source= unique(ds$source) ,log.offset1=ds$log_pop)
 
-  preds.inla2= c(res1, 'waic'=waic, 'dic'=dic)
+  preds.inla2= c(res1, 'waic'=waic, 'dic'=dic,'inla_obj'=mod.inla2)
   return(preds.inla2)
 }

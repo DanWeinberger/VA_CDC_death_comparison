@@ -146,13 +146,25 @@ The key for ORIGIN is as follows:
 
 
 
+
+## Check inputs
+Should be 1,012,805 deaths among 85+ year olds in 2020
+1,013,340
+```{r}
+N_deaths <- ag3[ag3$year==2020,] %>%
+  group_by(agec) %>%
+  summarize(N_deaths=sum(N_deaths))
+
+```
+
+
+
 ## Fit Model
 
 
 Fit to VA and CDC data separately. This function saves to an rds file summary tables with the excess incidence and RR by group (excluding raw counts and denominators). It also outputs the full summary tables that can be used in plotting in the list out.ds
 ```{r}
 out.ds <- call_inla(label='cdc', ds=ag3)
-
 ```
 
 
@@ -251,11 +263,14 @@ d1$agec <- factor(d1$agec, levels=c('25-44 years', '45-64 years','65-74 years', 
  ggplot(d1, aes(x=date, y=RR_median, group=sex, col=sex)) +
    geom_line()+
    theme_classic()+
+       geom_hline(yintercept = 1)+
+
    facet_grid(race_recode~agec)
 
   ggplot(d1, aes(x=date, y=excess_inc_median, group=sex, col=sex)) +
    geom_line()+
    theme_classic()+
+    geom_hline(yintercept = 0)+
    facet_wrap(race_recode~agec, scales='free')
 
 ```

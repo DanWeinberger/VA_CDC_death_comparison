@@ -85,7 +85,11 @@ cdc<- readRDS('./outputs/summary_list_cdc.rds')
 
 va.full <- readRDS('./outputs/confidential/outputs_all/summary_list_va.rds')
 
-va.users <- readRDS('./outputs/confidential/outputs_users/summary_list_va.rds')
+#VA active users using Christopher's definition
+va.users.cr <- readRDS('./outputs/confidential/outputs_users_CR_definition/summary_list_va.rds')
+
+#Liam's definition of active user (most stringent inclusion criteria)
+va.users.lr <- readRDS('./outputs/confidential/outputs_users_LR_definition/summary_list_va.rds')
 
 ```
 
@@ -97,12 +101,14 @@ NOTE TO SELF: Alternative INLA model is fit to the entire dataset and explicitly
 
 ```{r, fig.width=7, fig.height=5}
 
- va.users$preds.age.overall$source <- 'va.users'
+ va.users.cr$preds.age.overall$source <- 'va.users.cr'
+ va.users.lr$preds.age.overall$source <- 'va.users.lr'
+
  va.full$preds.age.overall$source <- 'va.full'
 
-all.inc <- bind_rows( va.full$preds.age.overall, va.users$preds.age.overall, cdc$preds.age.overall)
+all.inc <- bind_rows( va.full$preds.age.overall, va.users.cr$preds.age.overall,va.users.lr$preds.age.overall, cdc$preds.age.overall)
 
-all.inc2 <- bind_rows( va.full$preds.age.overall, va.users$preds.age.overall, cdc$preds.age.overall)
+all.inc2 <- bind_rows( va.full$preds.age.overall, va.users.cr$preds.age.overall,va.users.lr$preds.age.overall, cdc$preds.age.overall)
 
 all.inc2$exp_inc <- all.inc2$obs_inc-all.inc2$excess_inc_median
 
@@ -119,12 +125,14 @@ age.labs1 <- c("25-44 years","45-64 years" ,"65-74 years","75-84 years","85 year
 all.inc2.m$agec2[all.inc2.m$variable=='exp_inc'] <- all.inc2.m$agec2[all.inc2.m$variable=='exp_inc'] - 0.1
 
 all.inc2.m$pair1 <- as.numeric(as.factor(paste(all.inc2.m$agec, all.inc2.m$source)))
+all.inc2.m$source <- factor(all.inc2.m$source, levels=c('cdc','va.full','va.users.cr','va.users.lr') )
+
 ```
 
 Plot
-```{r, fig.width=3, fig.height=2}
+```{r, fig.width=6, fig.height=4}
 
-ggplot(all.inc2.m, aes(x=agec2, y=log(value),color=source, shape=variable))+
+p1 <- ggplot(all.inc2.m, aes(x=agec2, y=log(value),color=source, shape=variable))+
   geom_point() +
   scale_shape_manual(values=c(1,19))+
   geom_line(aes(group = pair1))+
@@ -136,7 +144,8 @@ guides(shape = 'none')+ #To turn off shape legend
   ylab('Log(Incidence)')+
   ylim(0,NA)+
   xlab("")+
-   scale_color_manual(labels = c("US", "VA enrollees", "VA active users"), values=c('#1b9e77','#d95f02','#7570b3'))
+   scale_color_manual(labels = c("US", "VA enrollees", "VA active users (CR)","VA active users (LR)"), values=c("#000000", "#E69F00", "#56B4E9", "#009E73"))
+p1
 ```
 
 
@@ -148,9 +157,9 @@ plot(log( all.inc$pred_inc_median),log(all.inc$excess_inc_median), col=as.factor
 ```
 
 ```{r, fig.width=8, fig.height=8}
-#plot(va.users$preds.age_race$excess_inc_median)
+#plot(va.users.cr$preds.age_race$excess_inc_median)
 
-ggplot(va.users$preds.age_race, aes(x=date, y=excess_inc_median)) +
+ggplot(va.users.cr$preds.age_race, aes(x=date, y=excess_inc_median)) +
   geom_line() +
   geom_hline(yintercept=0)+
   theme_classic()+
@@ -158,7 +167,7 @@ ggplot(va.users$preds.age_race, aes(x=date, y=excess_inc_median)) +
   facet_grid(agec~race_recode, scales='free')
   
 
-ggplot(va.users$preds.age_race, aes(x=date, y=excess_inc_median*pop)) +
+ggplot(va.users.cr$preds.age_race, aes(x=date, y=excess_inc_median*pop)) +
   geom_line() +
   geom_hline(yintercept=0)+
   theme_classic()+
@@ -166,7 +175,7 @@ ggplot(va.users$preds.age_race, aes(x=date, y=excess_inc_median*pop)) +
   facet_grid(agec~race_recode, scales='free')
   
 
-#plot(va.users$preds.age_race$excess_inc_median)
+#plot(va.users.cr$preds.age_race$excess_inc_median)
 
 ggplot(cdc$preds.age_race, aes(x=date, y=pop)) +
   geom_line() +
@@ -207,10 +216,10 @@ va.full$fit.plots$p1
 
 t1 <- va.full$fit.plots$p1
 
-range_act <- range(range(results$act), range(results$pred))
-
-dummy <- data.frame(pred = range_act, value = range_act,
-                    variable = "act", stringsAsFactors=FALSE)
+# range_act <- range(range(results$act), range(results$pred))
+# 
+# dummy <- data.frame(pred = range_act, value = range_act,
+#                     variable = "act", stringsAsFactors=FALSE)
 
 t2.va.full<- t1 +
   facet_wrap(~agec, scales='free', nrow=1)+
@@ -221,17 +230,17 @@ t2.va.full
 
 ```
 
-```{r, fig.width=4, fig.height=2}
+```{r, fig.width=8, fig.height=4}
 grid.arrange(t2.cdc, t2.va.full)
 ```
 
 Set same axes for both
-```{r, fig.width=4, fig.height=2}
-blank_data <- data.frame(agec = c('25-44 years', '45-64 years', '65-74 years', '75-84 years', '85 years and older'),x=as.Date('2014-01-01'), y= c(70,450,1000,2000, 5000))
+```{r, fig.width=8, fig.height=4}
+blank_data <- data.frame(agec = c('25-44 years', '45-64 years', '65-74 years', '75-84 years', '85 years and older'),x=as.Date('2014-01-01'), y= c(100,500,1200,2000, 6000))
 
 t3.cdc <- t2.cdc + geom_blank(data = blank_data, aes(x = x, y = y))
 
-t3.va.full <- t2.va.full + geom_blank(data = blank_data, aes(x = x, y = y))
+t3.va.full <- t2.va.full + geom_blank(data = blank_data, aes(x = x, y = y)) +geom_line(aes(color='black'))
 
 grid.arrange(t3.cdc, t3.va.full)
 
@@ -242,9 +251,9 @@ grid.arrange(t3.cdc, t3.va.full)
 ## Observed vs expected VA (active enrollees)
 
 ```{r fig.width=8, fig.height=4}
-va.users$fit.plots$p1
+va.users.cr$fit.plots$p1
 
-t1 <- va.users$fit.plots$p1
+t1 <- va.users.cr$fit.plots$p1
 
 t2.va.users<- t1 +
   facet_wrap(~agec, scales='free', nrow=1)+
@@ -254,29 +263,31 @@ t2.va.users<- t1 +
 t2.va.users
 
 t3.va.users <- t2.va.users + geom_blank(data = blank_data, aes(x = x, y = y))
+
+grid.arrange(t3.cdc, t3.va.users)
 ```
 
-```{r, fig.width=4, fig.height=3}
+```{r, fig.width=8, fig.height=6}
 grid.arrange(t3.cdc, t3.va.full,t3.va.users)
 ```
 
 Population size for VA users over time by age
 
 ```{r}
-ggplot(va.users$preds.age, aes(x=date, y=pop, group=agec, col=agec)) +
+ggplot(va.users.cr$preds.age, aes(x=date, y=pop, group=agec, col=agec)) +
   theme_classic() +
   geom_line()
 
 ```
 
 ```{r}
-va.users$preds.age.overall$N_deaths/sum(va.users$preds.age.overall$N_deaths)
+va.users.cr$preds.age.overall$N_deaths/sum(va.users.cr$preds.age.overall$N_deaths)
 ```
 
 Population size by race and age
 
 ```{r, fig.width=6, fig.height=4}
-ggplot(va.users$preds.age_race, aes(x=date, y=pop, group=agec, col=agec)) +
+ggplot(va.users.cr$preds.age_race, aes(x=date, y=pop, group=agec, col=agec)) +
   theme_classic() +
   geom_line() +
   ylim(0,NA) +
@@ -287,8 +298,8 @@ ggplot(va.users$preds.age_race, aes(x=date, y=pop, group=agec, col=agec)) +
 Observed vs expected (VA users)
 
 ```{r, fig.width=8, fig.height=8}
-va.users$fit.plots$p3 +ggtitle('White males') #white males
-va.users$fit.plots$p5 +ggtitle('All adults') #all people >25 years
+va.users.cr$fit.plots$p3 +ggtitle('White males') #white males
+va.users.cr$fit.plots$p5 +ggtitle('All adults') #all people >25 years
 
 
 
@@ -313,11 +324,11 @@ cdc$fit.plots$p5
 
 ```{r, fig.width=8, fig.height=4}
 
-va.users$preds.age$source <- 'va.users'
+va.users.cr$preds.age$source <- 'va.users'
 
 va.full$preds.age$source <- 'va.full'
 
-preds.age <- bind_rows(cdc$preds.age, va.full$preds.age, va.users$preds.age)
+preds.age <- bind_rows(cdc$preds.age, va.full$preds.age, va.users.cr$preds.age)
 
  p1 <- RR_plot(ds=preds.age ,datemin='2020-01-01', add.CIs=F) + 
     facet_grid(~agec, scales='fixed')
@@ -337,23 +348,29 @@ By region and age
 
 ```{r, fig.width=8, fg.height=12}
 
-va.users$preds.age.race.region$source <- 'va.users'
+va.users.cr$preds.age.race.region$source <- 'va.users'
 va.full$preds.age.race.region$source <- 'va.full'
 
-preds.age.race.region <- bind_rows(cdc$preds.age.race.region, va.users$preds.age.race.region,va.full$preds.age.race.region)
+preds.age.race.region <- bind_rows(cdc$preds.age.race.region, va.users.cr$preds.age.race.region,va.full$preds.age.race.region)
 
  p2 <- RR_plot(ds=preds.age.race.region[preds.age.race.region$race_recode==1 & preds.age.race.region$sex=='M',] ,datemin='2020-01-01',add.CIs=F) + 
     facet_grid(region~agec, scales='fixed')
  
  p2
 ```
+
 Overall rate ratio (observed/expected) in the CDC, VA full and VA users
 ```{r}
-test.list <- list(cdc, va.full, va.users)
+test.list <- list(cdc, va.full, va.users.cr, va.users.lr)
 
 summary1 <- lapply(test.list,extract_func ,measure='RR', round.level=2)
 
 sapply(summary1, '[[','overall.results' , simplify='array')
+
+View(test.list[[1]]$preds.date )
+View(test.list[[2]]$preds.date ) #va full
+View(test.list[[3]]$preds.date ) #CR def of users
+View(test.list[[4]]$preds.date ) #LR definition of useres
 
 qtr.age.res <- sapply(summary1, '[[','age.qtr.results' , simplify=F)
 qtr.age.res[[3]]
@@ -366,21 +383,165 @@ sapply(test.list,extract_func ,measure='excess_inc', round.level=-1, simplify='a
 Number of excess deaths in CDC, VA full and VA users
 
 ```{r}
-sapply(test.list,extract_func ,measure='excess', round.level=-2, simplify='array')
+#sapply(test.list,extract_func ,measure='excess', round.level=-2, simplify='array')
 
 ```
 
-## Population-standardized excess incidence
+Pop standardized RR. We will use the VA enrollees as the reference population for standardizing. If we go the other way (standardizing to US pop) things get funky because estimates for the women in the VA are based on only ~3% of ote deaths, but then get inflated to ~1/2 the deaths aftr standardizing.
+
+--RR = Observed Inc/ Expected Inc --need to calculate (sum(Pop_std_observed_inc)/sum(Pop_st_expected_inc))
+
+Calculations to recover observed and expected incidence from RR and excess incidence
+observed = excess + expected
+RR = obs/expected
+RR = (excess+expected)/expected
+
+RR*expected = excess + expected
+RR*expected - expected = excess
+expected * (RR- 1) = excess
+expected = excess/(RR-1)
+observed = excess + excess/(RR-1) = excess * (1 + 1/(RR-1))
+
+test1: 12000 obs, 10000 exp; RR=1.2; excess=2000
+2000*(1+1/0.2)=12000=observed
+
+test2: 8000 obs, 10000 exp; RR=0.8; excess=-2000
+-2000*(1 + 1/(-0.2))=8000=observed
+
+test3: doesn't work if RR=1
+10000 obs, 10000 exp; RR=1.0; excess=0
+0*(1 + 1/(0)=NaN=observed
+
+
+
 
 ```{r}
-va.users$std.inc$source <- 'va.users'
-va.full$std.inc$source <- 'va.full'
+std.pop.age.region.sex.race <- readRDS('./Data/std.pop.age.region.sex.race.rds')
 
-std.inc <- bind_rows(va.users$std.inc, va.full$std.inc, cdc$std.inc)
-std.inc$std_excess_inc <- round(std.inc$std_excess_inc, 1)
+std.pop.va <- va.full$preds.age.race.region[va.full$preds.age.race.region$date=='2020-01-01', c('agec','sex','race_recode','region', 'pop')]
+names(std.pop.va) <- c('agec','sex','race_recode','region', 'std.pop.va')
 
-std.inc.c <- dcast(std.inc, date~source, value.var='std_excess_inc')
-std.inc.c
+a1 <- list(cdc$preds.age.race.region, va.full$preds.age.race.region , va.users.cr$preds.age.race.region)
+names(a1) <- c('US','VA enrollees','VA active users')
+
+a2 <- lapply(names(a1), function(y){
+  x <- a1[[y]]
+  x$expected_inc = (x$excess_inc_median)/((x$RR_median)-1)
+  x$expected_inc[x$RR_median==1] <- 0
+x$obs_inc = x$excess_inc_median + x$expected_inc
+  x$obsN = x$obs_inc*x$pop/100000
+  x$expectedN= x$expected_inc*x$pop/100000
+return(x)
+})
+names(a2) <-  c('US','VA enrollees','VA active users')
+
+std_rr_func <- function( y , M_only=F){
+    
+    x <- a2[[y]]
+    
+    a2 <- merge(x, std.pop.va, by=c('agec','sex','race_recode','region'), all=T)
+    
+    a2$std.pop.va[is.na(a2$std.pop.va)] <- 0
+    
+    if(M_only==T){
+      a2 <- a2[a2$sex=='M',]
+    }
+    rr.ave <- a2 %>%
+      group_by(date) %>%
+      summarize('sum_obs_std'= sum((obsN+0.5)*std.pop.va/pop), 
+                'sum_expected_std'= sum((expectedN+0.5)*std.pop.va/pop),
+                'sum_obs'= sum((obsN+0.5)), 
+                'sum_expected'= sum((expectedN+0.5))
+                
+                ) %>%
+      mutate('Std_RR'=sum_obs_std/sum_expected_std,
+             'Raw_RR'=sum_obs/sum_expected)
+    rr.ave$label= y
+    
+    return(rr.ave)
+}
+
+std.rrs <- lapply(names(a2), std_rr_func)
+
+all.std.rrs <- bind_rows(std.rrs)
+
+all.std.rrs.plot <- melt(all.std.rrs[,c('date','label', 'Std_RR','Raw_RR')], id.vars=c('date','label'))
+```
+
+```{r, fig.width=6, fig.height=3}
+
+ggplot(all.std.rrs.plot, aes(x=date , y=value, group=label, col=label)) +
+         geom_line() +
+         theme_classic() +
+  facet_wrap(~variable) +
+  scale_y_continuous(name='Rate ratio')+
+  ggtitle('Raw and standarized Rate Ratios')
+```
+
+Compare RR from men and women across different populations
+```{r}
+ comp.rr1 <- 
+  merge(a2[[1]], a2[[2]], by=c('agec','sex','race_recode','region','date'))
+
+ggplot(comp.rr1[comp.rr1$obsN.y>=0 ,], aes(x=RR_median.x, y=RR_median.y, group=region, col=region, size=obsN.y))+
+  geom_point()+
+  geom_abline()+
+  theme_classic()+
+      scale_size(range = c(.1, 10), name="N deaths")+
+  facet_wrap(~sex) 
+
+
+ggplot(comp.rr1[comp.rr1$obsN.y>=0 ,], aes(x=obs_inc.x, y=obs_inc.y, group=region, col=region))+
+  geom_point()+
+  geom_abline()+
+  theme_classic()+
+  ylim(0, 25000)+
+  xlim(0,25000)+
+  facet_wrap(~sex) 
+
+
+```
+
+
+Plot observed vs expected using standardized incidence--using the observed data, this should give plot same as above
+```{r, fig.width=6, fig.height=4}
+b1 <- bind_rows(a2)
+b2 <- b1[b1$date>='2020-01-01',] %>%
+  group_by(source, agec) %>%
+  summarize(obsN= sum(obsN), expN=sum(expectedN), pop=sum(pop)/4) %>% #divide pop by 4 bc 4 time point per groi[]
+  ungroup() %>%
+  mutate('obs_inc'=obsN/pop*100000, 'exp_inc'=expN/pop*100000)
+
+b2.m <- melt(b2[,c('agec', 'source', 'obs_inc','exp_inc')], id.vars=c('agec', 'source'))
+
+
+
+b2.m$agec2 <- NA
+b2.m$agec2[b2.m$agec=="25-44 years"] <- 1
+b2.m$agec2[b2.m$agec=="45-64 years"] <- 2
+b2.m$agec2[b2.m$agec=="65-74 years"] <- 3
+b2.m$agec2[b2.m$agec=="75-84 years"] <- 4
+b2.m$agec2[b2.m$agec=="85 years and older"] <- 5
+
+age.labs1 <- c("25-44 years","45-64 years" ,"65-74 years","75-84 years","85 years and older")
+b2.m$agec2[b2.m$variable=='exp_inc'] <- b2.m$agec2[b2.m$variable=='exp_inc'] - 0.1
+
+b2.m$pair1 <- as.numeric(as.factor(paste(b2.m$agec, b2.m$source)))
+
+p1 <- ggplot(b2.m, aes(x=agec2, y=log(value),color=source, shape=variable))+
+  geom_point() +
+  scale_shape_manual(values=c(1,19))+
+  geom_line(aes(group = pair1))+
+guides(shape = 'none')+ #To turn off shape legend
+  theme_classic()+
+  scale_x_continuous( breaks = c(1:5),  label = age.labs1)+
+  #theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+ # ggtitle('Observed vs expected Incidence in 2020 (open symbol=expected)')+
+  ylab('Log(Incidence)')+
+  ylim(0,NA)+
+  xlab("")+
+   scale_color_manual(labels = c("US", "VA enrollees", "VA active users (CR)","VA active users (LR)"), values=c("#000000", "#E69F00", "#56B4E9", "#009E73"))
+p1
 ```
 
 ## Excess deaths per 100,000 by age group
