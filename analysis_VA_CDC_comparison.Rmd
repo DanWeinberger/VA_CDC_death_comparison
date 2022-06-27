@@ -418,8 +418,12 @@ test3: doesn't work if RR=1
 ```{r}
 std.pop.age.region.sex.race <- readRDS('./Data/std.pop.age.region.sex.race.rds')
 
-std.pop.va <- va.full$preds.age.race.region[va.full$preds.age.race.region$date=='2020-01-01', c('agec','sex','race_recode','region', 'pop')]
-names(std.pop.va) <- c('agec','sex','race_recode','region', 'std.pop.va')
+std.pop.va <- va.full$preds.age.race.region %>%
+  group_by(agec, sex, race_recode, region) %>%
+  summarize(std.pop.va=mean(pop)) %>% 
+  ungroup %>%
+  mutate( std.pop.va= std.pop.va/sum(std.pop.va)*100000)
+
 
 a1 <- list(cdc$preds.age.race.region, va.full$preds.age.race.region , va.users.cr$preds.age.race.region)
 names(a1) <- c('US','VA enrollees','VA active users')
@@ -483,7 +487,7 @@ Compare RR from men and women across different populations
  comp.rr1 <- 
   merge(a2[[1]], a2[[2]], by=c('agec','sex','race_recode','region','date'))
 
-ggplot(comp.rr1[comp.rr1$obsN.y>=0 ,], aes(x=RR_median.x, y=RR_median.y, group=region, col=region, size=obsN.y))+
+ggplot(comp.rr1[comp.rr1$obsN.y>=0 ,], aes(x=log(RR_median.x), y=log(RR_median.y), group=region, col=agec, size=obsN.y))+
   geom_point()+
   geom_abline()+
   theme_classic()+
@@ -491,12 +495,12 @@ ggplot(comp.rr1[comp.rr1$obsN.y>=0 ,], aes(x=RR_median.x, y=RR_median.y, group=r
   facet_wrap(~sex) 
 
 
-ggplot(comp.rr1[comp.rr1$obsN.y>=0 ,], aes(x=obs_inc.x, y=obs_inc.y, group=region, col=region))+
+ggplot(comp.rr1[comp.rr1$obsN.y>=0 ,], aes(x=log(obs_inc.x), y=log(obs_inc.y), group=region, col=agec))+
   geom_point()+
   geom_abline()+
   theme_classic()+
-  ylim(0, 25000)+
-  xlim(0,25000)+
+  #ylim(0, 25000)+
+  #xlim(0,25000)+
   facet_wrap(~sex) 
 
 
@@ -506,15 +510,30 @@ ggplot(comp.rr1[comp.rr1$obsN.y>=0 ,], aes(x=obs_inc.x, y=obs_inc.y, group=regio
 Plot observed vs expected using standardized incidence--using the observed data, this should give plot same as above
 ```{r, fig.width=6, fig.height=4}
 b1 <- bind_rows(a2)
+b1 <- merge(b1, std.pop.va, by=c('agec','race_recode','sex','region'), all=T)
+
+b1$std.pop.va[is.na(b1$std.pop.va)] <- 0
+
+#multiply these by 4 because we want an annual rate, and we are summing both numerator and denominator over the 4 quarters
 b2 <- b1[b1$date>='2020-01-01',] %>%
-  group_by(source, agec) %>%
-  summarize(obsN= sum(obsN), expN=sum(expectedN), pop=sum(pop)/4) %>% #divide pop by 4 bc 4 time point per groi[]
+  group_by(agec, race_recode, sex, region) %>%
+  mutate(n_times=n()) %>%
   ungroup() %>%
-  mutate('obs_inc'=obsN/pop*100000, 'exp_inc'=expN/pop*100000)
+  group_by(source, agec) %>%
+  summarize(sum.obsN= sum(obsN), 
+            obs.std.N = 100000*sum( (obsN * std.pop.va/pop)/sum(std.pop.va) )*4 ,
+            exp.std.N = 100000*sum( (expectedN * std.pop.va/pop)/sum(std.pop.va)*4 ),
+            expN=sum(expectedN), 
+            pop=sum(pop) ) %>% #divide pop by 4 bc 4 time point per group
+  ungroup() %>%
+  mutate('obs_inc'=sum.obsN/pop*100000*4, 'exp_inc'=expN/pop*100000*4, 'ratio'=obs_inc/obs.std.N)
 
+ggplot(b2[b2$source=='va.full',], aes(x=obs_inc, y=obs.std.N, col=source)) + 
+  geom_point() + 
+  theme_classic() +
+  geom_abline()
+       
 b2.m <- melt(b2[,c('agec', 'source', 'obs_inc','exp_inc')], id.vars=c('agec', 'source'))
-
-
 
 b2.m$agec2 <- NA
 b2.m$agec2[b2.m$agec=="25-44 years"] <- 1
@@ -540,9 +559,51 @@ guides(shape = 'none')+ #To turn off shape legend
   ylab('Log(Incidence)')+
   ylim(0,NA)+
   xlab("")+
-   scale_color_manual(labels = c("US", "VA enrollees", "VA active users (CR)","VA active users (LR)"), values=c("#000000", "#E69F00", "#56B4E9", "#009E73"))
+   scale_color_manual(labels = c("US", "VA enrollees", "VA active users (CR)","VA active users (LR)"), values=c("#000000", "#E69F00", "#56B4E9", "#009E73"))+
+  ggtitle('Observed and expected incidence')
 p1
+
+###REPEAT USING THE STANDARDIZED  POPs
+
+c2.m <- melt(b2[,c('agec', 'source', 'obs.std.N','exp.std.N')], id.vars=c('agec', 'source'))
+
+c2.m$agec2 <- NA
+c2.m$agec2[c2.m$agec=="25-44 years"] <- 1
+c2.m$agec2[c2.m$agec=="45-64 years"] <- 2
+c2.m$agec2[c2.m$agec=="65-74 years"] <- 3
+c2.m$agec2[c2.m$agec=="75-84 years"] <- 4
+c2.m$agec2[c2.m$agec=="85 years and older"] <- 5
+
+age.labs1 <- c("25-44 years","45-64 years" ,"65-74 years","75-84 years","85 years and older")
+c2.m$agec2[c2.m$variable=='exp.std.N'] <- c2.m$agec2[c2.m$variable=='exp.std.N'] - 0.1
+
+c2.m$pair1 <- as.numeric(as.factor(paste(c2.m$agec, c2.m$source)))
+
+p2 <- ggplot(c2.m, aes(x=agec2, y=log(value),color=source, shape=variable))+
+  geom_point() +
+  scale_shape_manual(values=c(1,19))+
+  geom_line(aes(group = pair1))+
+guides(shape = 'none')+ #To turn off shape legend
+  theme_classic()+
+  scale_x_continuous( breaks = c(1:5),  label = age.labs1)+
+  #theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+ # ggtitle('Observed vs expected Incidence in 2020 (open symbol=expected)')+
+  ylab('Log(Incidence)')+
+  ylim(0,NA)+
+  xlab("")+
+   scale_color_manual(labels = c("US", "VA enrollees", "VA active users (CR)","VA active users (LR)"), values=c("#000000", "#E69F00", "#56B4E9", "#009E73"))+
+  ggtitle('Observed and expected incidence, standardized population')
+p2
+
+
 ```
+
+```{r, fig.width=6, fig.height=4}
+
+p1 
+p2
+```
+
 
 ## Excess deaths per 100,000 by age group
 
