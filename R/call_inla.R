@@ -14,21 +14,21 @@ call_inla <- function(label=c('cdc','va'), ds){
 
   #We can then take the results from the INLA and aggregate over different groups. For example, by age, by age/race, by age/region, by age/race/region:
 
-  preds.age.sex.overall <- res1[res1$date>='2020-01-01',] %>%
+  preds.age.sex.overall <- res1[res1$date>='2020-04-01',] %>%
     group_by(source,agec, sex, variable) %>%
     summarize_grps_sums %>%
     ungroup() %>%
     group_by(source,agec,sex) %>%
     summarize_grps_quantiles
   
-  preds.age.overall <- res1[res1$date>='2020-01-01',] %>%
+  preds.age.overall <- res1[res1$date>='2020-04-01',] %>%
     group_by(source,agec,  variable) %>%
     summarize_grps_sums %>%
     ungroup() %>%
     group_by(source,agec) %>%
     summarize_grps_quantiles
   
-  preds.overall <- res1[res1$date>='2020-01-01',] %>%
+  preds.overall <- res1[res1$date>='2020-04-01',] %>%
     group_by(source,  variable) %>%
     summarize_grps_sums %>%
     ungroup() %>%
