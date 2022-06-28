@@ -6,18 +6,18 @@ summarize_grps_sums <- function(ds){
                'pred'=sum(value), 
                'popsum'=sum(pop),
                'n_times_agg'=length(unique(date)) ,
-               'sum_obs_std'= sum((N_deaths)*std.pop.va/sum(std.pop.va)/pop)*n_times_agg*100000,
-               'sum_expected_std'= sum((value)*std.pop.va/sum(std.pop.va)/pop)*n_times_agg*100000,
-               'sum_excess_std'= sum((N_deaths-value)*std.pop.va/sum(std.pop.va)/pop)*n_times_agg*100000,
+               'sum_obs_std'= sum((N_deaths)*std.pop.va/sum(std.pop.va)/pop)*n_times_agg*100000 * (4/n_times_agg),
+               'sum_expected_std'= sum((value)*std.pop.va/sum(std.pop.va)/pop)*n_times_agg*100000 * (4/n_times_agg),
+               'sum_excess_std'= sum((N_deaths-value)*std.pop.va/sum(std.pop.va)/pop)*n_times_agg*100000 * (4/n_times_agg),
                
                ) %>%
     mutate('RR'=(sum_N_deaths+0.5)/(pred+0.5),
            'Std_RR'= sum_obs_std/sum_expected_std,
            'pop'=popsum/n_times_agg,
-           'excess'=(sum_N_deaths - pred),
-           'excess_inc'=(sum_N_deaths - pred)/(popsum/n_times_agg)*100000  ,
-           'obs_inc'= sum_N_deaths/(popsum/n_times_agg)*100000  ,
-           'pred_inc'= pred/(popsum/n_times_agg)*100000  
+           'excess'=(sum_N_deaths - pred) ,
+           'excess_inc'=(sum_N_deaths - pred)/(popsum/n_times_agg)*100000 * (4/n_times_agg) ,
+           'obs_inc'= sum_N_deaths/(popsum/n_times_agg)*100000 * (4/n_times_agg) ,
+           'pred_inc'= pred/(popsum/n_times_agg)*100000  * (4/n_times_agg)
     )
   
   return(ds1)
