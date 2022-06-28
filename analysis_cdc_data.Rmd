@@ -73,8 +73,9 @@ set.seed(123)
 
 source('./R/read_dependent_scripts.R')
 
-std.pop.age.region.sex.race <- readRDS('./Data/std.pop.age.region.sex.race.rds')
-std.pop.age.sex.race <- readRDS('./Data/std.pop.age.sex.race.rds')
+#std.pop.age.region.sex.race <- readRDS('./Data/std.pop.age.region.sex.race.rds')
+std.pop.VA.age.region.sex.race <- readRDS('./Data/std.pop.VAenrollees.age.region.sex.race.rds')
+
 ```
 
 Popsize for the CDC data
@@ -166,6 +167,26 @@ Fit to VA and CDC data separately. This function saves to an rds file summary ta
 ```{r}
 out.ds <- call_inla(label='cdc', ds=ag3)
 ```
+
+## Extract summary stats for table 2
+
+```{r}
+results <- readRDS('./outputs/summary_list_cdc.rds')
+extract_func(results, measure= 'RR', round.level = 2 )
+
+extract_func(results, measure= 'RR_std', round.level = 2 )
+
+extract_func(results, measure= 'excess_inc', round.level = 0 )
+
+extract_func(results, measure= 'excess_std_inc', round.level = 0 )
+
+
+extract_func(results, measure= 'pred_inc', round.level = 0 )
+
+extract_func(results, measure= 'expected_std_inc', round.level = 0 )
+
+```
+
 
 
 
