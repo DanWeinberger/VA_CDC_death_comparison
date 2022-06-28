@@ -1,8 +1,45 @@
+#this function summarizes things by group and for each Monte Carlo sample
+summarize_grps_sums <- function(ds){
+  ds1 <- ds %>%
+    mutate('pop'=exp(log.offset1)*100000) %>%
+    summarise( 'sum_N_deaths'=sum(N_deaths), 
+               'pred'=sum(value), 
+               'popsum'=sum(pop),
+               'n_times_agg'=length(unique(date)) ,
+               'sum_obs_std'= sum((N_deaths)*std.pop.va/sum(std.pop.va)/pop)*n_times_agg*100000,
+               'sum_expected_std'= sum((value)*std.pop.va/sum(std.pop.va)/pop)*n_times_agg*100000,
+               'sum_excess_std'= sum((N_deaths-value)*std.pop.va/sum(std.pop.va)/pop)*n_times_agg*100000,
+               
+               ) %>%
+    mutate('RR'=(sum_N_deaths+0.5)/(pred+0.5),
+           'Std_RR'= sum_obs_std/sum_expected_std,
+           'pop'=popsum/n_times_agg,
+           'excess'=(sum_N_deaths - pred),
+           'excess_inc'=(sum_N_deaths - pred)/(popsum/n_times_agg)*100000  ,
+           'obs_inc'= sum_N_deaths/(popsum/n_times_agg)*100000  ,
+           'pred_inc'= pred/(popsum/n_times_agg)*100000  
+    )
+  
+  return(ds1)
+}
+
+#Then take summary stats of the MCMC samples
 summarize_grps_quantiles <- function(ds){
   ds2 <- ds %>%
-    summarise( 'N_deaths'=mean(N_deaths), 
+    summarise( 'N_deaths'=mean(sum_N_deaths), 
                
-               'excess_median'=sum(excess),
+               'obs_inc'= mean(obs_inc),
+               
+               'obs_std_inc'= mean(sum_obs_std),
+               
+               'expected_std_inc_median'= median(sum_expected_std),
+               'expected_std_inc_lcl' =quantile(sum_expected_std,probs=0.025), 
+               'expected_std_inc_ucl'=quantile(sum_expected_std,probs=0.975), 
+               
+               'excess_std_inc_median'=median(sum_excess_std), 
+               'excess_std_inc_lcl' =quantile(sum_excess_std,probs=0.025), 
+               'excess_std_inc_ucl'=quantile(sum_excess_std,probs=0.975),              
+               
                'excess_median'=median(excess), 
                'excess_lcl' =quantile(excess,probs=0.025), 
                'excess_ucl'=quantile(excess,probs=0.975), 
@@ -17,6 +54,10 @@ summarize_grps_quantiles <- function(ds){
                'RR_median'=median(RR),
                'RR_lcl'=quantile(RR,probs=0.025),
                'RR_ucl'=quantile(RR,probs=0.975),
+               
+               'RR_std_median'=median(Std_RR),
+               'RR_std_lcl'=quantile(Std_RR,probs=0.025),
+               'RR_std_ucl'=quantile(Std_RR,probs=0.975),
                
                'excess_inc_median'=median(excess_inc),
                'excess_inc_lcl'=quantile(excess_inc, probs=0.025),
@@ -34,20 +75,3 @@ summarize_grps_quantiles <- function(ds){
 
 
 
-
-summarize_grps_sums <- function(ds){
- ds1 <- ds %>%
-    summarise( 'N_deaths'=sum(N_deaths), 
-               'pred'=sum(value), 
-               'popsum'=sum(exp(log.offset1)*100000),
-               'n_times_agg'=length(unique(date))) %>%
-    mutate('RR'=(N_deaths+0.5)/(pred+0.5),
-           'pop'=popsum/n_times_agg,
-           'excess'=(N_deaths - pred),
-           'excess_inc'=(N_deaths - pred)/(popsum/n_times_agg)*100000  ,
-            'obs_inc'= N_deaths/(popsum/n_times_agg)*100000  ,
-            'pred_inc'= pred/(popsum/n_times_agg)*100000  
-    )
-
-  return(ds1)
-}

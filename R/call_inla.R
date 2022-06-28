@@ -6,11 +6,12 @@ call_inla <- function(label=c('cdc','va'), ds){
   mod1 <- inla_model3(ds) #pblapply(combine.data, inla_model3)
   
   
-  res1 <- mod1$preds_covars.m
+  res1 <- mod1$preds_covars.m %>%
+    mutate(year=lubridate::year(date)) %>%
+    full_join( y=std.pop.VA.age.region.sex.race, by=c('agec','sex','region','race_recode')) %>%
+    mutate(std.pop.va = ifelse(is.na(std.pop.va), 0.5, std.pop.va))
   
-  res1$year <- lubridate::year(res1$date)
-  
-  
+
   #We can then take the results from the INLA and aggregate over different groups. For example, by age, by age/race, by age/region, by age/race/region:
 
   preds.age.sex.overall <- res1[res1$date>='2020-01-01',] %>%
@@ -79,42 +80,28 @@ call_inla <- function(label=c('cdc','va'), ds){
     summarize_grps_quantiles 
   
   
-  ##FOR NOW< IGNORE MISSING RACE CATEGORY WHEN CALCULATING STD RATES
-  
-  std.pop.age.region.sex.race <- std.pop.age.region.sex.race[std.pop.age.region.sex.race$agec!='Under 25 Years',]
-  
-  std.pop.age.region.sex.race$pop.prop <-
-    std.pop.age.region.sex.race$std.pop/sum(std.pop.age.region.sex.race$std.pop)
-  
-  preds.age.race.region <- merge(preds.age.race.region, std.pop.age.region.sex.race, by=c('agec','region','race_recode','sex'))
-  
-  
-  std.inc <- preds.age.race.region[preds.age.race.region$race_recode != '999',] %>%
-    group_by(source,date) %>%
-    summarize(std_excess_inc=sum(excess_inc_median*pop.prop)) %>%
-    ungroup()
-  std.inc
-  
+  # ##FOR NOW< IGNORE MISSING RACE CATEGORY WHEN CALCULATING STD RATES
+
   
   #Export summary measures
   preds.age.out <- preds.age %>%
-    select(source, agec, date, pop, starts_with('RR'),starts_with('excess_inc'), starts_with('log_RR') )
+    select(source, agec, date, pop, starts_with('RR'),starts_with('excess_inc'),starts_with('excess_std_inc'), starts_with('log_RR'),starts_with('obs_inc'),starts_with('obs_std_inc') )
   
   preds.age.race.region.out <- preds.age.race.region %>%
-    select(source, agec, region, race_recode, sex, date,pop, starts_with('RR'),starts_with('excess_inc'), starts_with('log_RR') )
+    select(source, agec, region, race_recode, sex, date,pop, starts_with('RR'),starts_with('excess_inc'),starts_with('excess_std_inc'), starts_with('log_RR'),starts_with('obs_inc'),starts_with('obs_std_inc')  )
   
   preds.age_race.out <- preds.age_race %>% 
-    select(source, agec, race_recode, date, pop, starts_with('RR'),starts_with('excess_inc'), starts_with('log_RR') )
+    select(source, agec, race_recode, date, pop, starts_with('RR'),starts_with('excess_inc'), starts_with('log_RR'),starts_with('obs_inc'),starts_with('obs_std_inc')  )
   
   preds.age.region.sex.out <- preds.age.region.sex %>%
-    select(source, agec, region, sex, date, pop, starts_with('RR'),starts_with('excess_inc'), starts_with('log_RR') )
+    select(source, agec, region, sex, date, pop, starts_with('RR'),starts_with('excess_inc'), starts_with('log_RR'),starts_with('obs_inc'),starts_with('obs_std_inc')  )
   
   fit.plots <- mod.fit.plots(preds.age, preds.age.race.region,preds.age.region)
   rr.plot1 <- rr.plots(preds.age, preds.age.race.region,preds.age.region)
   saveRDS(fit.plots, paste0('./outputs/fit.plots.', label, '.rds'))
   saveRDS(rr.plot1, paste0('./outputs/rr.plots.', label, '.rds')) 
   
-  save.list <- list('fit.plots'=fit.plots, 'rr.plot1'=rr.plot1,'preds.age'=preds.age.out,'std.inc'=std.inc,'preds.age.race.region'=preds.age.race.region.out,'preds.age_race'=preds.age_race.out, 'preds.date'= preds.date,'preds.overall'=preds.overall,'preds.age.overall'=preds.age.overall,'preds.age.sex.overall'=preds.age.sex.overall)
+  save.list <- list('fit.plots'=fit.plots, 'rr.plot1'=rr.plot1,'preds.age'=preds.age.out,'preds.age.race.region'=preds.age.race.region.out,'preds.age_race'=preds.age_race.out, 'preds.date'= preds.date,'preds.overall'=preds.overall,'preds.age.overall'=preds.age.overall,'preds.age.sex.overall'=preds.age.sex.overall)
   saveRDS(save.list,paste0('./outputs/', 'summary_list_',label,'.rds'))
   
  

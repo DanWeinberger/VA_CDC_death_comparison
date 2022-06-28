@@ -428,6 +428,8 @@ std.pop.va <- va.full$preds.age.race.region %>%
   ungroup %>%
   mutate( std.pop.va= std.pop.va/sum(std.pop.va)*100000)
 
+saveRDS(std.pop.va,'./Data/std.pop.VAenrollees.age.region.sex.race.rds')
+
 va.users.lr$preds.age.race.region$source <- 'va.lr'
   
 a1 <- list(cdc$preds.age.race.region, va.full$preds.age.race.region , va.users.cr$preds.age.race.region,
