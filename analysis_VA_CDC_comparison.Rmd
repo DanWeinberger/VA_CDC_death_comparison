@@ -387,6 +387,10 @@ Number of excess deaths in CDC, VA full and VA users
 
 ```
 
+```{r}
+sapply(test.list,extract_func ,measure='RR', round.level=2, simplify='array')
+```
+
 Pop standardized RR. We will use the VA enrollees as the reference population for standardizing. If we go the other way (standardizing to US pop) things get funky because estimates for the women in the VA are based on only ~3% of ote deaths, but then get inflated to ~1/2 the deaths aftr standardizing.
 
 --RR = Observed Inc/ Expected Inc --need to calculate (sum(Pop_std_observed_inc)/sum(Pop_st_expected_inc))
@@ -424,9 +428,11 @@ std.pop.va <- va.full$preds.age.race.region %>%
   ungroup %>%
   mutate( std.pop.va= std.pop.va/sum(std.pop.va)*100000)
 
-
-a1 <- list(cdc$preds.age.race.region, va.full$preds.age.race.region , va.users.cr$preds.age.race.region)
-names(a1) <- c('US','VA enrollees','VA active users')
+va.users.lr$preds.age.race.region$source <- 'va.lr'
+  
+a1 <- list(cdc$preds.age.race.region, va.full$preds.age.race.region , va.users.cr$preds.age.race.region,
+           va.users.lr$preds.age.race.region)
+names(a1) <- c('US','VA enrollees','VA active users', 'VA active users (frequent)')
 
 a2 <- lapply(names(a1), function(y){
   x <- a1[[y]]
@@ -437,7 +443,7 @@ x$obs_inc = x$excess_inc_median + x$expected_inc
   x$expectedN= x$expected_inc*x$pop/100000
 return(x)
 })
-names(a2) <-  c('US','VA enrollees','VA active users')
+names(a2) <- c('US','VA enrollees','VA active users', 'VA active users (frequent)')
 
 std_rr_func <- function( y , M_only=F){
     
@@ -452,10 +458,10 @@ std_rr_func <- function( y , M_only=F){
     }
     rr.ave <- a2 %>%
       group_by(date) %>%
-      summarize('sum_obs_std'= sum((obsN+0.5)*std.pop.va/pop), 
-                'sum_expected_std'= sum((expectedN+0.5)*std.pop.va/pop),
-                'sum_obs'= sum((obsN+0.5)), 
-                'sum_expected'= sum((expectedN+0.5))
+      summarize('sum_obs_std'= sum((obsN)*std.pop.va/sum(std.pop.va)/pop), 
+                'sum_expected_std'= sum((expectedN)*std.pop.va/sum(std.pop.va)/pop),
+                'sum_obs'= sum((obsN)), 
+                'sum_expected'= sum((expectedN))
                 
                 ) %>%
       mutate('Std_RR'=sum_obs_std/sum_expected_std,
@@ -471,6 +477,7 @@ all.std.rrs <- bind_rows(std.rrs)
 
 all.std.rrs.plot <- melt(all.std.rrs[,c('date','label', 'Std_RR','Raw_RR')], id.vars=c('date','label'))
 ```
+
 
 ```{r, fig.width=6, fig.height=3}
 
@@ -534,6 +541,7 @@ ggplot(b2[b2$source=='va.full',], aes(x=obs_inc, y=obs.std.N, col=source)) +
   geom_abline()
        
 b2.m <- melt(b2[,c('agec', 'source', 'obs_inc','exp_inc')], id.vars=c('agec', 'source'))
+b2.m$source <- factor(c2.m$source, c('cdc','va.full','va.users','va.lr'))
 
 b2.m$agec2 <- NA
 b2.m$agec2[b2.m$agec=="25-44 years"] <- 1
@@ -566,6 +574,7 @@ p1
 ###REPEAT USING THE STANDARDIZED  POPs
 
 c2.m <- melt(b2[,c('agec', 'source', 'obs.std.N','exp.std.N')], id.vars=c('agec', 'source'))
+c2.m$source <- factor(c2.m$source, c('cdc','va.full','va.users','va.lr'))
 
 c2.m$agec2 <- NA
 c2.m$agec2[c2.m$agec=="25-44 years"] <- 1
@@ -578,6 +587,7 @@ age.labs1 <- c("25-44 years","45-64 years" ,"65-74 years","75-84 years","85 year
 c2.m$agec2[c2.m$variable=='exp.std.N'] <- c2.m$agec2[c2.m$variable=='exp.std.N'] - 0.1
 
 c2.m$pair1 <- as.numeric(as.factor(paste(c2.m$agec, c2.m$source)))
+
 
 p2 <- ggplot(c2.m, aes(x=agec2, y=log(value),color=source, shape=variable))+
   geom_point() +
@@ -602,6 +612,32 @@ p2
 
 p1 
 p2
+```
+
+
+## Summary observed an standardized deaths rates for Table 2
+
+```{r}
+c2 <- b1[b1$date>='2020-01-01',] %>%
+  group_by(source) %>%
+  summarize(sum.obsN= sum(obsN), 
+            obs.std.N = 100000*sum( (obsN * std.pop.va/pop)/sum(std.pop.va) )*4 ,
+            exp.std.N = 100000*sum( (expectedN * std.pop.va/pop)/sum(std.pop.va)*4 ),
+            expN=sum(expectedN), 
+            pop=sum(pop)/4 ) %>% #divide pop by 4 bc 4 time point per group
+  ungroup() %>%
+  mutate('obs_inc'=sum.obsN/pop*100000, 'exp_inc'=expN/pop*100000, 'excess_inc'=obs_inc-exp_inc, 'excess_inc_std'=obs.std.N - exp.std.N , 'IRR.raw'=obs_inc/exp_inc)
+#remember this is for adults age 25+ only!--103 million people 0-24 years, so that makes sense for 226 million in 25+
+c2
+
+
+```
+
+check work here with data from the Monte Carlo resampled approach
+```{r}
+round(c(cdc$preds.overall$RR_median, cdc$preds.overall$RR_lcl, cdc$preds.overall$RR_ucl),2)
+round(c(va.full$preds.overall$RR_median, va.full$preds.overall$RR_lcl, va.full$preds.overall$RR_ucl),2)
+
 ```
 
 
