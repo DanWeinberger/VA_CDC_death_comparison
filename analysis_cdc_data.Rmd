@@ -151,6 +151,10 @@ The key for ORIGIN is as follows:
 ## Check inputs
 Should be 1,012,805 deaths among 85+ year olds in 2020
 1,013,340
+
+
+In the US the death rate in 2019:
+3,319,063 deaths among people age 25+;	226,635,013 people age 25+	1,464.5 deaths/100000
 ```{r}
 N_deaths <- ag3[ag3$year==2020,] %>%
   group_by(agec) %>%
@@ -251,6 +255,7 @@ ggplot(e4[e4$date>='2020-01-01',], aes(x=date, y=excess_inc_median, group=sex, c
 ```
 
 RR by race in the Northeast, by sex
+
 ```{r}
 d1 <- out.ds$preds.age.race.region[out.ds$preds.age.race.region$region=='Northeast' ,]
 
@@ -261,7 +266,9 @@ d1 <- out.ds$preds.age.race.region[out.ds$preds.age.race.region$region=='Northea
 
 
 ```
+
 Sex differences by race and age in the northeast
+
 ```{r, fig.width=4, fig.height=4}
 d1 <- out.ds$preds.age.race.region[out.ds$preds.age.race.region$region=='Northeast' ,]
 
@@ -280,7 +287,9 @@ d1$agec <- factor(d1$agec, levels=c('25-44 years', '45-64 years','65-74 years', 
    facet_wrap(race_recode~agec, scales='free')
 
 ```
+
 And in the South
+
 ```{r, fig.width=4, fig.height=4}
 d1 <- out.ds$preds.age.race.region[out.ds$preds.age.race.region$region=='South' ,]
 

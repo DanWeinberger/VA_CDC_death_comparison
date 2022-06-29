@@ -13,7 +13,7 @@ summarize_grps_sums <- function(ds){
                ) %>%
     mutate('RR'=(sum_N_deaths+0.5)/(pred+0.5),
            'Std_RR'= sum_obs_std/sum_expected_std,
-           'pop'=popsum/n_times_agg,
+           'pop'=popsum/n_times_agg,  #this is important if combining multiple time points
            'excess'=(sum_N_deaths - pred) ,
            'excess_inc'=(sum_N_deaths - pred)/(popsum/n_times_agg)*100000 ,#* (4/n_times_agg) ,
            'obs_inc'= sum_N_deaths/(popsum/n_times_agg)*100000 , #* (4/n_times_agg) ,

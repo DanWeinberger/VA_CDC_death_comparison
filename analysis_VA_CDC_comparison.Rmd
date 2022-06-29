@@ -392,6 +392,33 @@ Number of excess deaths in CDC, VA full and VA users
 sapply(test.list,extract_func ,measure='RR', round.level=2, simplify='array')
 ```
 
+
+```{r}
+sapply(test.list,extract_func ,measure='excess_inc', round.level=0, simplify='array')
+```
+
+```{r}
+extract_func(results, measure= 'pred_inc', round.level = 0 )
+```
+
+
+
+extract_func(results, measure= 'RR', round.level = 2 )
+
+extract_func(results, measure= 'RR_std', round.level = 2 )
+
+extract_func(results, measure= 'excess_inc', round.level = 0 )
+
+extract_func(results, measure= 'excess_std_inc', round.level = 0 )
+
+
+
+extract_func(results, measure= 'expected_std_inc', round.level = 0 )
+
+
+extract_func(results, measure= 'expected_std_inc', round.level = 0 )
+
+
 Pop standardized RR. We will use the VA enrollees as the reference population for standardizing. If we go the other way (standardizing to US pop) things get funky because estimates for the women in the VA are based on only ~3% of ote deaths, but then get inflated to ~1/2 the deaths aftr standardizing.
 
 --RR = Observed Inc/ Expected Inc --need to calculate (sum(Pop_std_observed_inc)/sum(Pop_st_expected_inc))
@@ -524,19 +551,16 @@ b1 <- merge(b1, std.pop.va, by=c('agec','race_recode','sex','region'), all=T)
 
 b1$std.pop.va[is.na(b1$std.pop.va)] <- 0
 
-#multiply these by 4 because we want an annual rate, and we are summing both numerator and denominator over the 4 quarters
-b2 <- b1[b1$date>='2020-01-01',] %>%
-  group_by(agec, race_recode, sex, region) %>%
-  mutate(n_times=n()) %>%
-  ungroup() %>%
+b2 <- b1[b1$date>='2020-04-01',] %>%
   group_by(source, agec) %>%
   summarize(sum.obsN= sum(obsN), 
-            obs.std.N = 100000*sum( (obsN * std.pop.va/pop)/sum(std.pop.va) )*4 ,
-            exp.std.N = 100000*sum( (expectedN * std.pop.va/pop)/sum(std.pop.va)*4 ),
+            n_times=length(unique(date)),
+            obs.std.N = 100000*sum( (obsN * std.pop.va/pop)/sum(std.pop.va) ) ,
+            exp.std.N = 100000*sum( (expectedN * std.pop.va/pop)/sum(std.pop.va) ),
             expN=sum(expectedN), 
-            pop=sum(pop) ) %>% #divide pop by 4 bc 4 time point per group
+            pop=sum(pop)/n_times ) %>% #divide pop by 4 bc 4 time point per group
   ungroup() %>%
-  mutate('obs_inc'=sum.obsN/pop*100000*4, 'exp_inc'=expN/pop*100000*4, 'ratio'=obs_inc/obs.std.N)
+  mutate('obs_inc'=sum.obsN/pop*100000, 'exp_inc'=expN/pop*100000, 'ratio'=obs_inc/obs.std.N)
 
 ggplot(b2[b2$source=='va.full',], aes(x=obs_inc, y=obs.std.N, col=source)) + 
   geom_point() + 
@@ -544,7 +568,8 @@ ggplot(b2[b2$source=='va.full',], aes(x=obs_inc, y=obs.std.N, col=source)) +
   geom_abline()
        
 b2.m <- melt(b2[,c('agec', 'source', 'obs_inc','exp_inc')], id.vars=c('agec', 'source'))
-b2.m$source <- factor(c2.m$source, c('cdc','va.full','va.users','va.lr'))
+
+b2.m$source <- factor(b2.m$source, c('cdc','va.full','va.users','va.lr'))
 
 b2.m$agec2 <- NA
 b2.m$agec2[b2.m$agec=="25-44 years"] <- 1
@@ -621,15 +646,16 @@ p2
 ## Summary observed an standardized deaths rates for Table 2
 
 ```{r}
-c2 <- b1[b1$date>='2020-01-01',] %>%
+c2 <- b1[b1$date>='2020-04-01',] %>%
   group_by(source) %>%
   summarize(sum.obsN= sum(obsN), 
-            obs.std.N = 100000*sum( (obsN * std.pop.va/pop)/sum(std.pop.va) )*4 ,
-            exp.std.N = 100000*sum( (expectedN * std.pop.va/pop)/sum(std.pop.va)*4 ),
+            n.times=length(unique(date)),
+            obs.std.N = 100000*sum( (obsN * std.pop.va/pop)/sum(std.pop.va) ) ,
+            exp.std.N = 100000*sum( (expectedN * std.pop.va/pop)/sum(std.pop.va) ),
             expN=sum(expectedN), 
-            pop=sum(pop)/4 ) %>% #divide pop by 4 bc 4 time point per group
+            popsum=sum(pop)/n.times ) %>% 
   ungroup() %>%
-  mutate('obs_inc'=sum.obsN/pop*100000, 'exp_inc'=expN/pop*100000, 'excess_inc'=obs_inc-exp_inc, 'excess_inc_std'=obs.std.N - exp.std.N , 'IRR.raw'=obs_inc/exp_inc)
+  mutate('obs_inc'=sum.obsN/popsum*100000, 'exp_inc'=expN/popsum*100000, 'excess_inc'=obs_inc-exp_inc, 'excess_inc_std'=obs.std.N - exp.std.N , 'IRR.raw'=obs_inc/exp_inc)
 #remember this is for adults age 25+ only!--103 million people 0-24 years, so that makes sense for 226 million in 25+
 c2
 
