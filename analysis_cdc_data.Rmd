@@ -185,6 +185,13 @@ extract_func(results, measure= 'pred_inc', round.level = 0 )
 
 extract_func(results, measure= 'expected_std_inc', round.level = 0 )
 
+
+extract_func(results, measure= 'expected_std_inc', round.level = 0 )
+
+
+results$preds.overall$obs_inc
+results$preds.overall$obs_std_inc
+
 ```
 
 

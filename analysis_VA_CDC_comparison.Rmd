@@ -380,6 +380,7 @@ Excess deaths/100,000 in the CDC, VA full and VA users
 ```{r}
 sapply(test.list,extract_func ,measure='excess_inc', round.level=-1, simplify='array')
 ```
+
 Number of excess deaths in CDC, VA full and VA users
 
 ```{r}
