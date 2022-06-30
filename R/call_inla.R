@@ -9,7 +9,7 @@ call_inla <- function(label=c('cdc','va'), ds){
   res1 <- mod1$preds_covars.m %>%
     mutate(year=lubridate::year(date)) %>%
     full_join( y=std.pop.VA.age.region.sex.race, by=c('agec','sex','region','race_recode')) %>%
-    mutate(std.pop.va = ifelse(is.na(std.pop.va), 0.5, std.pop.va))
+    mutate(std.pop.va = ifelse(is.na(std.pop.va), min(std.pop.va, na.rm=T), std.pop.va))
   
 
   #We can then take the results from the INLA and aggregate over different groups. For example, by age, by age/race, by age/region, by age/race/region:
@@ -79,7 +79,7 @@ call_inla <- function(label=c('cdc','va'), ds){
     group_by(source,agec,region,sex, date) %>%
     summarize_grps_quantiles
   
-  preds.age.race.region <- res1[res1$year==2020,] %>%
+  preds.age.race.region <- res1[res1$date>='2020-01-01',] %>% #NOTE this one is for full 2020, not just Q2-4
     group_by(source,agec,region,race_recode,sex, date, variable) %>%
     summarize_grps_sums %>%
     ungroup() %>%
