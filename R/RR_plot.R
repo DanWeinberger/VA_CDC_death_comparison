@@ -13,7 +13,7 @@ RR_plot <- function(ds, xvar,  groupvar, colvar, add.CIs=T,datemin='2014-01-01',
     geom_hline(yintercept=1, col='gray', lty=2) +
     
         xlim(as.Date(datemin), as.Date('2020-12-31')) +
-    ylim(0.5,2)+
+    ylim(0.9,1.75)+
     theme(panel.spacing= unit(2,'lines') , axis.text.x=element_text(angle=90)) 
 
   if(add.CIs==T){

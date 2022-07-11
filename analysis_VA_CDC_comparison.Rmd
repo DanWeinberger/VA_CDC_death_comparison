@@ -236,7 +236,7 @@ grid.arrange(t2.cdc, t2.va.full)
 
 Set same axes for both
 ```{r, fig.width=8, fig.height=4}
-blank_data <- data.frame(agec = c('25-44 years', '45-64 years', '65-74 years', '75-84 years', '85 years and older'),x=as.Date('2014-01-01'), y= c(100,500,1200,2000, 6000))
+blank_data <- data.frame(agec = c('25-44 years', '45-64 years', '65-74 years', '75-84 years', '85 years and older'),x=as.Date('2014-01-01'), y= c(75,500,1000,2000, 6000))
 
 t3.cdc <- t2.cdc + geom_blank(data = blank_data, aes(x = x, y = y))
 
@@ -398,8 +398,29 @@ sapply(test.list,extract_func ,measure='excess_inc', round.level=0, simplify='ar
 ```
 
 ```{r}
-extract_func(results, measure= 'pred_inc', round.level = 0 )
+sapply(test.list,extract_func ,measure='pred_inc', round.level=0, simplify='array')
 ```
+
+```{r}
+c(test.list[[1]]$preds.overall$obs_inc, test.list[[2]]$preds.overall$obs_inc, test.list[[3]]$preds.overall$obs_inc)
+```
+
+```{r}
+sapply(test.list,extract_func ,measure='expected_std_inc', round.level=0, simplify='array')
+```
+
+```{r}
+sapply(test.list,extract_func ,measure='RR_std', round.level=2, simplify='array')
+```
+
+```{r}
+sapply(test.list,extract_func ,measure='excess_std_inc', round.level=0, simplify='array')
+```
+
+```{r}
+c(test.list[[1]]$preds.overall$obs_std_inc, test.list[[2]]$preds.overall$obs_std_inc, test.list[[3]]$preds.overall$obs_std_inc)
+```
+
 
 
 
@@ -459,10 +480,12 @@ std.pop.va <- va.full$preds.age.race.region %>%
 saveRDS(std.pop.va,'./Data/std.pop.VAenrollees.age.region.sex.race.rds')
 
 va.users.lr$preds.age.race.region$source <- 'va.lr'
-  
-a1 <- list(cdc$preds.age.race.region, va.full$preds.age.race.region , va.users.cr$preds.age.race.region,
-           va.users.lr$preds.age.race.region)
-names(a1) <- c('US','VA enrollees','VA active users', 'VA active users (frequent)')
+va.users.cr$preds.age.race.region$source <- 'va.cr'
+  va.full$preds.age.race.region$source <- 'va.full'
+
+a1 <- list(cdc$preds.age.race.region, va.full$preds.age.race.region , va.users.cr$preds.age.race.region )##,
+           #va.users.lr$preds.age.race.region)
+names(a1) <- c('US','VA enrollees','VA active users' ) # , 'VA active users (frequent)')
 
 a2 <- lapply(names(a1), function(y){
   x <- a1[[y]]
@@ -473,7 +496,7 @@ x$obs_inc = x$excess_inc_median + x$expected_inc
   x$expectedN= x$expected_inc*x$pop/100000
 return(x)
 })
-names(a2) <- c('US','VA enrollees','VA active users', 'VA active users (frequent)')
+names(a2) <- c('US','VA enrollees','VA active users') #, 'VA active users (frequent)')
 
 std_rr_func <- function( y , M_only=F){
     
@@ -546,7 +569,7 @@ ggplot(comp.rr1[comp.rr1$obsN.y>=0 ,], aes(x=log(obs_inc.x), y=log(obs_inc.y), g
 ```{r}
  comp.rr1 <-  bind_rows(a2) 
 comp1.rr1.m <- melt(comp.rr1, id.vars=c('source','agec','region','race_recode','sex','date'))
-comp1.rr1.c <- dcast( comp1.rr1.m, agec+region+race_recode+sex+date ~ source+ variable )
+comp1.rr1.c <- dcast( comp1.rr1.m, agec+region+race_recode+sex+date ~ source+ variable, value.var = 'value' )
 comp1.rr1.c$sex <- factor(comp1.rr1.c$sex, c('M','F'))
 comp1.rr1.c$region <- factor(comp1.rr1.c$region)
 comp1.rr1.c$agec <- factor(comp1.rr1.c$agec)
@@ -620,7 +643,7 @@ ggplot(b2[b2$source=='va.full',], aes(x=obs_inc, y=obs.std.N, col=source)) +
        
 b2.m <- melt(b2[,c('agec', 'source', 'obs_inc','exp_inc')], id.vars=c('agec', 'source'))
 
-b2.m$source <- factor(b2.m$source, c('cdc','va.full','va.users','va.lr'))
+b2.m$source <- factor(b2.m$source, c('cdc','va.full','va.users') )#,'va.lr'))
 
 b2.m$agec2 <- NA
 b2.m$agec2[b2.m$agec=="25-44 years"] <- 1
@@ -718,6 +741,21 @@ check work here with data from the Monte Carlo resampled approach
 round(c(cdc$preds.overall$RR_median, cdc$preds.overall$RR_lcl, cdc$preds.overall$RR_ucl),2)
 round(c(va.full$preds.overall$RR_median, va.full$preds.overall$RR_lcl, va.full$preds.overall$RR_ucl),2)
 
+```
+
+
+##Summary by sex
+```{r}
+
+
+cdc$preds.sex %>%
+  filter(date>='2020-01-01')
+
+va.users.cr$preds.sex %>%
+  filter(date>='2020-01-01')
+
+va.full$preds.sex %>%
+  filter(date>='2020-01-01')
 ```
 
 

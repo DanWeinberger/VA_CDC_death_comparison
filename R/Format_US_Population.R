@@ -7,6 +7,7 @@ library(dplyr)
 library(reshape2)
 library(tidyr)
 library(ggplot2)
+library(Hmisc )
 
 Format_US_Population <- function(){
   #these are all July 1 estimates of popsize for the year
@@ -53,7 +54,7 @@ Format_US_Population <- function(){
   
   d2 <- d1 %>%
     group_by(agec, region, race_recode, sex) %>%
-    summarize('pop2013'=sum(pop2013),
+    dplyr::summarize('pop2013'=sum(pop2013),
               'pop2014'=sum(pop2014),
               'pop2015'=sum(pop2015),
               'pop2016'=sum(pop2016),
@@ -62,6 +63,32 @@ Format_US_Population <- function(){
               'pop2019'=sum(pop2019),
               'pop2020'=sum(pop2020)) %>%
     ungroup()
+  
+  summary_stats <- d1 %>%
+    #filter(agey>=25) %>%
+    dplyr::summarize( ave_age= wtd.mean(agey, pop2019),
+                      ave.age_sd= sqrt(wtd.var(agey, pop2019)),
+                      popsize=sum(pop2019)
+      )
+  
+  summary_stats2 <- d1 %>%
+    group_by(agec) %>%
+    dplyr::summarize(  popsize=sum(pop2019)    ) %>%
+    ungroup() %>%
+    mutate(pct= popsize/sum(popsize))
+  
+  summary_stats3 <- d1 %>%
+    group_by(race_recode) %>%
+    dplyr::summarize(  popsize=sum(pop2019)    ) %>%
+    ungroup() %>%
+    mutate(pct= popsize/sum(popsize))
+  
+  summary_stats4 <- d1 %>%
+    group_by(sex) %>%
+    dplyr::summarize(  popsize=sum(pop2019)    ) %>%
+    ungroup() %>%
+    mutate(pct= popsize/sum(popsize))
+  
   
   d2.m <- melt(d2, id.vars=c('agec','region','race_recode','sex'))
   
@@ -116,7 +143,7 @@ Format_US_Population <- function(){
   
   std.pop2 <- std.pop1 %>%
     group_by(agec, sex, race_recode) %>%
-    summarize('std.pop'=sum(std.pop)) %>%
+    dplyr::summarize('std.pop'=sum(std.pop)) %>%
     ungroup()
   
   saveRDS(std.pop2,'./Data/std.pop.age.sex.race.rds')
