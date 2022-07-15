@@ -109,6 +109,36 @@ ag3$pandemic_effect  <- as.factor(ag3$pandemic_effect )
 
 ```
 
+Look at COVID deaths (based on ICD10) by group
+```{r}
+covid_counts <- readRDS('./Data/confidential/us_covid_deaths_by_group.rds') %>%
+  mutate(month=(qtr*3 - 2), date=as.Date(paste(2020, month,'01', sep='-')))
+
+
+
+  filled_pop2 <- readRDS('./Data/pop_interpol.rds') %>%
+    mutate(sex = as.factor(sex), race_recode=as.factor(race_recode) , year=lubridate::year(date) ) %>%
+    filter(year==2020) 
+
+  
+
+
+
+  covid_counts <- merge(covid_counts, filled_pop2, by.x=c('sex','race_recode','agec','region','date'),by.y=c('sex','race_recode','agec','region','date'), all.x=T)
+  
+  covid_age <- covid_counts %>%
+    group_by(agec) %>%
+    summarize(N_covid=sum(N_covid), pop=sum(pop.interpol)/4) %>%
+    mutate(inc= N_covid/pop*100000)
+  
+ covid_total <- covid_counts %>%
+   filter(!is.na(agec) & agec != 'Under 25 Years') %>%
+    summarize(N_covid=sum(N_covid), pop=sum(pop.interpol)/4) %>%
+    mutate(inc= N_covid/pop*100000)
+  
+```
+
+
 https://www.cdc.gov/nchs/nvss/bridged_race/data_documentation.htm#vintage2020
 
 Race:

@@ -3,11 +3,11 @@
 library(data.table)
 library(readr)
 library(pbapply)
+library(Hmisc )
 library(dplyr)
 library(reshape2)
 library(tidyr)
 library(ggplot2)
-library(Hmisc )
 
 Format_US_Population <- function(){
   #these are all July 1 estimates of popsize for the year

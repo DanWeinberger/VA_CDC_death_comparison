@@ -534,6 +534,8 @@ all.std.rrs.plot <- melt(all.std.rrs[,c('date','label', 'Std_RR','Raw_RR')], id.
 
 ```{r, fig.width=6, fig.height=3}
 
+all.std.rrs.plot$variable <- factor(all.std.rrs.plot$variable, c('Raw_RR','Std_RR'))
+
 ggplot(all.std.rrs.plot, aes(x=date , y=value, group=label, col=label)) +
          geom_line() +
          theme_classic() +
@@ -615,6 +617,36 @@ ggplot(comp1.rr1.c, aes(x=log(cdc_excess_inc_median), y=log(va.full_excess_inc_m
 
 
 ```
+
+Did race/ethnic groups in the VA fare worse in terms of excess deaths than the general population? 
+```{r}
+ggplot(comp1.rr1.c, aes(x=log(cdc_excess_inc_median), y=log(va.full_excess_inc_median), group=region, col=agec, size=va.full_pop))+
+  geom_point(alpha=0.5)+
+  geom_abline()+
+  theme_classic() +
+        scale_size(range = c(.1, 8), name="Population size")+
+  facet_wrap(~race_recode) +
+  ylab('Log(Deaths/100,000 among VA enrollees)') +
+  xlab('Log(Deaths/100,000 among the US population)')
+
+
+
+
+```
+ How about by agec
+```{r}
+ggplot(comp1.rr1.c, aes(x=log(cdc_excess_inc_median), y=log(va.full_excess_inc_median), group=region, col=sex, size=va.full_pop))+
+  geom_point(alpha=0.5)+
+  geom_abline()+
+  theme_classic() +
+        scale_size(range = c(.1, 8), name="Population size")+
+  facet_wrap(~agec) +
+  ylab('Log(Deaths/100,000 among VA enrollees)') +
+  xlab('Log(Deaths/100,000 among the US population)')
+
+
+```
+
 
 
 
@@ -756,6 +788,23 @@ va.users.cr$preds.sex %>%
 
 va.full$preds.sex %>%
   filter(date>='2020-01-01')
+
+
+plot.ds1 <- cdc$preds.sex %>%
+  mutate(expected_inc = obs_std_inc/RR_std_median)
+
+plot.ds2 <- va.full$preds.sex %>%
+  mutate(expected_inc = obs_std_inc/RR_std_median)
+
+plot.ds3 <- va.users.cr$preds.sex %>%
+  mutate(expected_inc = obs_std_inc/RR_std_median)
+
+ggplot(plot.ds3, aes(x=date, y=log(obs_std_inc), group=sex, col=sex)) +
+  geom_line() +
+  theme_classic() +
+  geom_line(data=plot.ds,aes(x=date, y=log(expected_inc), group=sex), color='gray') +
+  facet_wrap(~sex) +
+  ylim(0.5, NA)
 ```
 
 

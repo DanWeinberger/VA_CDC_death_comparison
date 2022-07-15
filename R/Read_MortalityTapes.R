@@ -124,6 +124,8 @@ saveRDS(agg2,'./Data/Confidential/compiled_sex_agec_race_qtr_region.rds')
 ## Cause specific deaths
 df1$one <-1
 
+covid.codes <- c('U071','Z28310','Z28311',"Z86.16", "Z28.9","J1282","M3581") #Define codes for COVID-19 https://www.cdc.gov/mmwr/volumes/70/wr/mm7014e2.htm U07.1 probably only relevant one for 2020
+
 rsv.codes <- c('B974','J121', "J210", 'J205') #Define codes for RSV
 
 pneumococcal.codes <- c('A403','J13','B953','G001')
@@ -134,10 +136,21 @@ icd.cols <- grep('icd',names(df1)) #Define columns with multiple cause of death 
 
 df.rsv <- pbapply(df1[,icd.cols],2, function(x) x %in% rsv.codes )
 
+df.covid <- pbapply(df1[,icd.cols],2, function(x) x %in% covid.codes )
+
 df.pneumo <- pbapply(df1[,icd.cols],2, function(x) x %in% pneumococcal.codes )
 
 df.leg <- pbapply(df1[,icd.cols],2, function(x) x %in% ld.codes )
 
+
+df1$covid <- rowSums(df.covid) #how many RSV codes re there per row?
+df1$covid <- 1*(df1$covid>0) #convert to binary
+
+covid_counts <- df1 %>%
+  filter(year==2020) %>%
+  group_by(agec, race_recode, sex,region, qtr) %>%
+  summarize(N_covid=sum(covid))
+saveRDS(covid_counts,'./Data/confidential/covid_deaths_by_group.rds')
 
 df1$rsv <- rowSums(df.rsv) #how many RSV codes re there per row?
 df1$rsv <- 1*(df1$rsv>0) #convert to binary
