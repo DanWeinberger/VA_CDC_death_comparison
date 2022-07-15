@@ -150,7 +150,7 @@ covid_counts <- df1 %>%
   filter(year==2020) %>%
   group_by(agec, race_recode, sex,region, qtr) %>%
   summarize(N_covid=sum(covid))
-saveRDS(covid_counts,'./Data/confidential/covid_deaths_by_group.rds')
+saveRDS(covid_counts,'./Data/confidential/us_covid_deaths_by_group.rds')
 
 df1$rsv <- rowSums(df.rsv) #how many RSV codes re there per row?
 df1$rsv <- 1*(df1$rsv>0) #convert to binary
