@@ -76,9 +76,9 @@ source('./R/read_dependent_scripts.R')
 RACE RECODE:
  1=White
  2=Black
- 3=American Indian
- 4=Asian
- 5=Hawaiian/Pacific Islanders
+ 3=Hispanic
+ 4=American Indian
+ 5=Asian/Hawaiian/Pacific Islanders
 
 ```{r}
 cdc<- readRDS('./outputs/summary_list_cdc.rds')
@@ -346,7 +346,7 @@ preds.age <- bind_rows(cdc$preds.age, va.full$preds.age, va.users.cr$preds.age)
 
 By region and age
 
-```{r, fig.width=8, fg.height=12}
+```{r, fig.width=8, fig.height=6}
 
 va.users.cr$preds.age.race.region$source <- 'va.users'
 va.full$preds.age.race.region$source <- 'va.full'
@@ -357,6 +357,8 @@ preds.age.race.region <- bind_rows(cdc$preds.age.race.region, va.users.cr$preds.
     facet_grid(region~agec, scales='fixed')
  
  p2
+ ggsave('rr_region_age.jpg',path = './plots', width = 8, height =6, device='jpg', dpi=400)
+
 ```
 
 Overall rate ratio (observed/expected) in the CDC, VA full and VA users
@@ -475,7 +477,8 @@ std.pop.va <- va.full$preds.age.race.region %>%
   group_by(agec, sex, race_recode, region) %>%
   summarize(std.pop.va=mean(pop)) %>% 
   ungroup %>%
-  mutate( std.pop.va= std.pop.va/sum(std.pop.va)*100000)
+  mutate( std.pop.va= std.pop.va/sum(std.pop.va)*100000) %>%
+  filter(race_recode !='0')
 
 saveRDS(std.pop.va,'./Data/std.pop.VAenrollees.age.region.sex.race.rds')
 
@@ -536,12 +539,15 @@ all.std.rrs.plot <- melt(all.std.rrs[,c('date','label', 'Std_RR','Raw_RR')], id.
 
 all.std.rrs.plot$variable <- factor(all.std.rrs.plot$variable, c('Raw_RR','Std_RR'))
 
-ggplot(all.std.rrs.plot, aes(x=date , y=value, group=label, col=label)) +
+p.rr <- ggplot(all.std.rrs.plot, aes(x=date , y=value, group=label, col=label)) +
          geom_line() +
          theme_classic() +
   facet_wrap(~variable) +
   scale_y_continuous(name='Rate ratio')+
   ggtitle('Raw and standarized Rate Ratios')
+
+ggsave('rr_plot.jpg',path = './plots', width = 6, height = 3, device='jpg', dpi=400)
+
 ```
 
 Compare RR from men and women across different populations
@@ -738,7 +744,7 @@ guides(shape = 'none')+ #To turn off shape legend
    scale_color_manual(labels = c("US", "VA enrollees", "VA active users (CR)","VA active users (LR)"), values=c("#000000", "#E69F00", "#56B4E9", "#009E73"))+
   ggtitle('Observed and expected incidence, standardized population')
 p2
-
+ggsave('obs_expected_age.jpg',path = './plots', width = 6, height = 4, device='jpeg', dpi=400)
 
 ```
 
@@ -802,10 +808,141 @@ plot.ds3 <- va.users.cr$preds.sex %>%
 ggplot(plot.ds3, aes(x=date, y=log(obs_std_inc), group=sex, col=sex)) +
   geom_line() +
   theme_classic() +
-  geom_line(data=plot.ds,aes(x=date, y=log(expected_inc), group=sex), color='gray') +
+  geom_line(data=plot.ds3,aes(x=date, y=log(expected_inc), group=sex), color='gray') +
   facet_wrap(~sex) +
   ylim(0.5, NA)
 ```
+
+```{r}
+ggplot(cdc$preds.age.sex.overall, aes(x=agec, y=RR_std_median, group=sex, col=sex)) +
+         geom_point() +
+  geom_point(data=va.users.cr$preds.age.sex.overall, aes(x=agec, y=RR_std_median, group=sex, col=sex), shape=1) + 
+  theme_classic()
+```
+Observed vs expected by age and sex 
+```{r, fig.width=8, fig.height=4}
+
+b1.sex <- b1
+
+b1.sex$std.pop.va[is.na(b1.sex$std.pop.va)] <- 0
+
+b2.sex <- b1.sex[b1.sex$date>='2020-04-01',] %>%
+  group_by(source, agec,sex) %>%
+  summarize(sum.obsN= sum(obsN), 
+            n_times=length(unique(date)),
+            obs.std.N = 100000*sum( (obsN * std.pop.va/pop)/sum(std.pop.va) ) ,
+            exp.std.N = 100000*sum( (expectedN * std.pop.va/pop)/sum(std.pop.va) ),
+            expN=sum(expectedN), 
+            pop=sum(pop)/n_times ) %>% #divide pop by 4 bc 4 time point per group
+  ungroup() %>%
+  mutate('obs_inc'=sum.obsN/pop*100000, 'exp_inc'=expN/pop*100000, 'ratio'=obs_inc/obs.std.N)
+
+
+c2.m.sex <- melt(b2.sex[,c('agec','sex', 'source', 'obs.std.N','exp.std.N')], id.vars=c('agec','sex', 'source'))
+c2.m.sex$source <- factor(c2.m.sex$source, c('cdc','va.full','va.users','va.lr'))
+
+c2.m.sex$agec2 <- NA
+c2.m.sex$agec2[c2.m.sex$agec=="25-44 years"] <- 1
+c2.m.sex$agec2[c2.m.sex$agec=="45-64 years"] <- 2
+c2.m.sex$agec2[c2.m.sex$agec=="65-74 years"] <- 3
+c2.m.sex$agec2[c2.m.sex$agec=="75-84 years"] <- 4
+c2.m.sex$agec2[c2.m.sex$agec=="85 years and older"] <- 5
+
+age.labs1 <- c("25-44 years","45-64 years" ,"65-74 years","75-84 years","85 years and older")
+
+c2.m.sex$sex2 <- 1
+c2.m.sex$sex2[c2.m.sex$sex=='F'] <- 2
+c2.m.sex$sex2[c2.m.sex$variable=='exp.std.N'] <- c2.m.sex$sex2[c2.m.sex$variable=='exp.std.N'] - 0.1
+
+c2.m.sex$agec2[c2.m.sex$variable=='exp.std.N'] <- c2.m.sex$agec2[c2.m.sex$variable=='exp.std.N'] - 0.1
+
+c2.m.sex$pair1 <- as.numeric(as.factor(paste(c2.m.sex$sex, c2.m.sex$source)))
+c2.m.sex$agec <- as.factor(c2.m.sex$agec)
+sex.labs1 <- c('M', 'F')
+
+
+#Some of the CDC
+p2 <- ggplot(c2.m.sex, aes(x=sex2, y=log(value),color=source, shape=variable, group=sex2))+
+  geom_point() +
+  scale_shape_manual(values=c(1,19))+
+  geom_line(aes(group = pair1))+
+guides(shape = 'none')+ #To turn off shape legend
+  theme_classic()+
+  scale_x_continuous( breaks = c(1:2),  label = sex.labs1)+
+
+  ylab('Log(Incidence)')+
+  ylim(0,NA)+
+  xlab("")+
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=1))+
+   scale_color_manual(labels = c("US", "VA enrollees", "VA active users (CR)","VA active users (LR)"), values=c("#000000", "#E69F00", "#56B4E9", "#009E73"))+
+  ggtitle('Observed and expected incidence, stratified by sex, standardized population') +
+  facet_wrap(~agec, ncol=5)+
+ theme(panel.spacing.x = unit(2, "lines"),panel.spacing.y= unit(4, "lines"))
+p2
+ggsave('obs_exp_sex.jpg',path = './plots', width = 8, height = 4, device='jpg', dpi=400)
+
+```
+
+Observed vs expected by age and race/ethnicity 
+ 1=White
+ 2=Black
+ 3=Hispanic
+ 4=American Indian
+ 5=Asian/Hawaiian/Pacific Islanders
+```{r, fig.width=8, fig.height=5}
+
+b1.race_recode <- b1
+
+b1.race_recode$std.pop.va[is.na(b1.race_recode$std.pop.va)] <- 0
+
+b2.race_recode <- b1.race_recode[b1.race_recode$date>='2020-04-01',] %>%
+  group_by(source, race_recode) %>%
+  summarize(sum.obsN= sum(obsN), 
+            n_times=length(unique(date)),
+            obs.std.N = 100000*sum( (obsN * std.pop.va/pop)/sum(std.pop.va) ) ,
+            exp.std.N = 100000*sum( (expectedN * std.pop.va/pop)/sum(std.pop.va) ),
+            expN=sum(expectedN), 
+            pop=sum(pop)/n_times ) %>% #divide pop by 4 bc 4 time point per group
+  ungroup() %>%
+  mutate('obs_inc'=sum.obsN/pop*100000, 'exp_inc'=expN/pop*100000, 'ratio'=obs_inc/obs.std.N)
+
+
+c2.m.race_recode <- melt(b2.race_recode[,c('race_recode', 'source', 'obs.std.N','exp.std.N')], id.vars=c('race_recode', 'source'))
+c2.m.race_recode$source <- factor(c2.m.race_recode$source, c('cdc','va.full','va.users','va.lr'))
+
+
+c2.m.race_recode$race_recode2 <- as.numeric(c2.m.race_recode$race_recode)
+c2.m.race_recode$race_recode2[c2.m.race_recode$variable=='exp.std.N'] <- c2.m.race_recode$race_recode2[c2.m.race_recode$variable=='exp.std.N'] - 0.1
+
+c2.m.race_recode$agec2[c2.m.race_recode$variable=='exp.std.N'] <- c2.m.race_recode$agec2[c2.m.race_recode$variable=='exp.std.N'] - 0.1
+
+c2.m.race_recode$pair1 <- as.numeric(as.factor(paste(c2.m.race_recode$race_recode, c2.m.race_recode$source)))
+race_recode.labs1 <- c('White', 'Black', 'Hispanic', 'American Indian','Asian/Hawaiian/Pac Is.' )
+
+
+
+
+#Some of the CDC
+p2 <- ggplot(c2.m.race_recode, aes(x=race_recode2, y=log(value),color=source, shape=variable, group=race_recode2))+
+  geom_point() +
+  scale_shape_manual(values=c(1,19))+
+  geom_line(aes(group = pair1))+
+  guides(shape = 'none')+ #To turn off shape legend
+  theme_classic()+
+  scale_x_continuous( breaks = c(1:5),  label = race_recode.labs1)+
+  ylab('Log(Incidence)')+
+  ylim(0,NA)+
+  xlab("")+
+  theme(axis.text.x = element_text(angle = 20, vjust = 1, hjust=1))+
+  scale_color_manual(labels = c("US", "VA enrollees", "VA active users (CR)","VA active users (LR)"), values=c("#000000", "#E69F00", "#56B4E9", "#009E73"))+
+  ggtitle('Observed and expected incidence, stratified by Race/Ethnicity, standardized pop.') 
+p2
+ggsave('obs_exp_race.jpg',path = './plots', width = 8, height = 5, device='jpg', dpi=400)
+
+
+```
+
+
 
 
 ## Excess deaths per 100,000 by age group
