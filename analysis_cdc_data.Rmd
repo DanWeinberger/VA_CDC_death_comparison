@@ -198,14 +198,20 @@ N_deaths <- ag3[ag3$year==2020,] %>%
 
 
 Fit to VA and CDC data separately. This function saves to an rds file summary tables with the excess incidence and RR by group (excluding raw counts and denominators). It also outputs the full summary tables that can be used in plotting in the list out.ds
-```{r}
+```{r, eval=F}
+
 out.ds <- call_inla(label='cdc', ds=ag3)
+
+saveRDS(out.ds,'./outputs/out.ds.cdc.rds')
 ```
 
 ## Extract summary stats for table 2
 
 ```{r}
+out.ds <-readRDS('./outputs/out.ds.cdc.rds')
+
 results <- readRDS('./outputs/summary_list_cdc.rds')
+
 extract_func(results, measure= 'RR', round.level = 2 )
 
 extract_func(results, measure= 'RR_std', round.level = 2 )
@@ -340,6 +346,50 @@ d1$agec <- factor(d1$agec, levels=c('25-44 years', '45-64 years','65-74 years', 
     geom_hline(yintercept = 0)+
    facet_wrap(race_recode~agec, scales='free')
 
+```
+
+## Compare excess and recorded covid
+'non-COVID' means deaths not recorded as due to covid
+
+RACE_RECODE: 
+1=Non-Hispanic White
+2=Non-Hispanic- Black
+3= Hispanic
+4=American Indian/Native Alaskan
+5= Asian/Pacific Island
+999=Missing
+
+```{r, fig.width=6, fig.heigh=5}
+detailed_summary <- results$preds.age.race.region %>%
+  mutate(race_recode=as.numeric(as.character(race_recode))  ) %>%
+  left_join(covid_counts, by=c('sex','race_recode', 'region','date', 'agec')) %>%
+  mutate(      excess_deaths= excess_inc_median/100000*pop.interpol, 
+               N_non_covid_excess=excess_deaths-N_covid,
+               non_covid_excess_rate= N_non_covid_excess/pop.interpol*100000)
+
+men <- detailed_summary %>%
+  filter(sex=='M' & region=='South') %>%
+  mutate(race_recode=as.factor(race_recode)) %>%
+ggplot( aes(x=date, y=non_covid_excess_rate, group=race_recode, col=race_recode, lty=race_recode)) +
+  geom_line() +
+  theme_classic() +
+  ylab('Excess non-COVID deaths/100000')+
+  facet_wrap(~agec, scales='free')
+men
+
+
+aggr_summary <- detailed_summary %>%
+  group_by(agec,race_recode, date) %>%
+    mutate(race_recode=factor(race_recode, c('1','2','3','4','5'), c('White','Black' ,'Hispanic','Amer.Indian','Asian/Paci/Is'))) %>%
+
+  summarize(N_non_covid_excess=sum(N_non_covid_excess), pop.interpol=sum(pop.interpol)) %>%
+    mutate( non_covid_excess_rate= N_non_covid_excess/pop.interpol*100000) %>%
+ggplot( aes(x=date, y=non_covid_excess_rate, group=race_recode, col=race_recode, lty=race_recode)) +
+  geom_line() +
+  theme_classic() +
+  ylab('Excess non-COVID deaths/100000')+
+  facet_wrap(~agec, scales='free')
+aggr_summary
 ```
 
 
