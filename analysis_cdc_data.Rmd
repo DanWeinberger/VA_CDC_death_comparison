@@ -468,11 +468,11 @@ p3c <- ggplot(aggr_summary_NE, aes(x=date, y=covid_death_rate, group=race_recode
 p3b/p3c/p3a 
 ```
 
-by race, age South only
+by race, age Midwest only
 
 ```{r, fig.width=8}
 aggr_summary_S <- detailed_summary %>%
-  filter(region=='South') %>%
+  filter(region=='Midwest') %>%
   group_by(agec,race_recode, date) %>%
     mutate(race_recode=factor(race_recode, c('1','2','3','4','5'), c('White','Black' ,'Hispanic','Amer.Indian','Asian/PacifIs'))) %>%
 
