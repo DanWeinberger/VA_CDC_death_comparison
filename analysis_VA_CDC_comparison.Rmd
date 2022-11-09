@@ -94,6 +94,23 @@ va.users.lr <- readRDS('./outputs/confidential/outputs_users_LR_definition/summa
 
 ```
 
+Number of deaths, CR definition
+```{r}
+htmlTable(va.users.cr$preds.age.overall %>%
+  select(agec,  excess_median) %>%
+  mutate(excess_median=round(excess_median)))
+
+
+summary_deaths <- va.users.cr$preds.age.race.region %>%
+  mutate(excess_deaths=excess_inc_median*pop/100000 ) %>%
+  filter(date>='2020-04-01') %>%
+  group_by(agec, race_recode, region, sex) %>%
+  summarize(excess_deaths=round(sum(excess_deaths)))
+
+write.csv(summary_deaths, './outputs/summary_excess_group.csv')
+```
+
+
 NOTE TO SELF: Alternative INLA model is fit to the entire dataset and explicitly estimates quarterly change from baseline. Use call_inla_full_ds.R and inla_model_full_ds1.R
 
 

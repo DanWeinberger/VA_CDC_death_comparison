@@ -1,0 +1,234 @@
+"","agec","race_recode","region","sex","excess_deaths"
+"1","25-44 years","0","Midwest","F",9
+"2","25-44 years","0","Midwest","M",0
+"3","25-44 years","0","Northeast","F",-1
+"4","25-44 years","0","Northeast","M",7
+"5","25-44 years","0","South","F",7
+"6","25-44 years","0","South","M",16
+"7","25-44 years","0","West","F",5
+"8","25-44 years","0","West","M",35
+"9","25-44 years","1","Midwest","F",7
+"10","25-44 years","1","Midwest","M",9
+"11","25-44 years","1","Northeast","F",-1
+"12","25-44 years","1","Northeast","M",24
+"13","25-44 years","1","South","F",-23
+"14","25-44 years","1","South","M",115
+"15","25-44 years","1","West","F",-6
+"16","25-44 years","1","West","M",72
+"17","25-44 years","2","Midwest","F",2
+"18","25-44 years","2","Midwest","M",17
+"19","25-44 years","2","Northeast","F",0
+"20","25-44 years","2","Northeast","M",10
+"21","25-44 years","2","South","F",13
+"22","25-44 years","2","South","M",61
+"23","25-44 years","2","West","F",6
+"24","25-44 years","2","West","M",17
+"25","25-44 years","3","Midwest","F",-1
+"26","25-44 years","3","Midwest","M",8
+"27","25-44 years","3","Northeast","F",-1
+"28","25-44 years","3","Northeast","M",6
+"29","25-44 years","3","South","F",6
+"30","25-44 years","3","South","M",22
+"31","25-44 years","3","West","F",0
+"32","25-44 years","3","West","M",18
+"33","25-44 years","4","Midwest","F",0
+"34","25-44 years","4","Midwest","M",7
+"35","25-44 years","4","Northeast","M",0
+"36","25-44 years","4","South","F",-1
+"37","25-44 years","4","South","M",3
+"38","25-44 years","4","West","F",-1
+"39","25-44 years","4","West","M",16
+"40","25-44 years","5","Midwest","F",0
+"41","25-44 years","5","Midwest","M",1
+"42","25-44 years","5","Northeast","M",-2
+"43","25-44 years","5","South","F",0
+"44","25-44 years","5","South","M",6
+"45","25-44 years","5","West","F",1
+"46","25-44 years","5","West","M",4
+"47","45-64 years","0","Midwest","F",34
+"48","45-64 years","0","Midwest","M",66
+"49","45-64 years","0","Northeast","F",33
+"50","45-64 years","0","Northeast","M",44
+"51","45-64 years","0","South","F",29
+"52","45-64 years","0","South","M",143
+"53","45-64 years","0","West","F",40
+"54","45-64 years","0","West","M",105
+"55","45-64 years","1","Midwest","F",19
+"56","45-64 years","1","Midwest","M",354
+"57","45-64 years","1","Northeast","F",8
+"58","45-64 years","1","Northeast","M",212
+"59","45-64 years","1","South","F",6
+"60","45-64 years","1","South","M",474
+"61","45-64 years","1","West","F",20
+"62","45-64 years","1","West","M",274
+"63","45-64 years","2","Midwest","F",33
+"64","45-64 years","2","Midwest","M",288
+"65","45-64 years","2","Northeast","F",18
+"66","45-64 years","2","Northeast","M",230
+"67","45-64 years","2","South","F",43
+"68","45-64 years","2","South","M",817
+"69","45-64 years","2","West","F",16
+"70","45-64 years","2","West","M",178
+"71","45-64 years","3","Midwest","F",1
+"72","45-64 years","3","Midwest","M",13
+"73","45-64 years","3","Northeast","F",-1
+"74","45-64 years","3","Northeast","M",45
+"75","45-64 years","3","South","F",1
+"76","45-64 years","3","South","M",126
+"77","45-64 years","3","West","F",7
+"78","45-64 years","3","West","M",65
+"79","45-64 years","4","Midwest","F",1
+"80","45-64 years","4","Midwest","M",23
+"81","45-64 years","4","Northeast","M",0
+"82","45-64 years","4","South","F",-1
+"83","45-64 years","4","South","M",25
+"84","45-64 years","4","West","F",0
+"85","45-64 years","4","West","M",28
+"86","45-64 years","5","Midwest","F",0
+"87","45-64 years","5","Midwest","M",8
+"88","45-64 years","5","Northeast","F",0
+"89","45-64 years","5","Northeast","M",4
+"90","45-64 years","5","South","F",5
+"91","45-64 years","5","South","M",11
+"92","45-64 years","5","West","F",-5
+"93","45-64 years","5","West","M",31
+"94","65-74 years","0","Midwest","F",28
+"95","65-74 years","0","Midwest","M",43
+"96","65-74 years","0","Northeast","F",28
+"97","65-74 years","0","Northeast","M",2
+"98","65-74 years","0","South","F",36
+"99","65-74 years","0","South","M",-104
+"100","65-74 years","0","West","F",52
+"101","65-74 years","0","West","M",-34
+"102","65-74 years","1","Midwest","F",-8
+"103","65-74 years","1","Midwest","M",1952
+"104","65-74 years","1","Northeast","F",18
+"105","65-74 years","1","Northeast","M",921
+"106","65-74 years","1","South","F",-24
+"107","65-74 years","1","South","M",2276
+"108","65-74 years","1","West","F",-16
+"109","65-74 years","1","West","M",918
+"110","65-74 years","2","Midwest","F",7
+"111","65-74 years","2","Midwest","M",378
+"112","65-74 years","2","Northeast","F",6
+"113","65-74 years","2","Northeast","M",275
+"114","65-74 years","2","South","F",39
+"115","65-74 years","2","South","M",969
+"116","65-74 years","2","West","F",0
+"117","65-74 years","2","West","M",62
+"118","65-74 years","3","Midwest","F",1
+"119","65-74 years","3","Midwest","M",58
+"120","65-74 years","3","Northeast","F",1
+"121","65-74 years","3","Northeast","M",91
+"122","65-74 years","3","South","F",10
+"123","65-74 years","3","South","M",237
+"124","65-74 years","3","West","F",3
+"125","65-74 years","3","West","M",264
+"126","65-74 years","4","Midwest","F",0
+"127","65-74 years","4","Midwest","M",40
+"128","65-74 years","4","Northeast","F",-1
+"129","65-74 years","4","Northeast","M",3
+"130","65-74 years","4","South","F",6
+"131","65-74 years","4","South","M",79
+"132","65-74 years","4","West","F",-3
+"133","65-74 years","4","West","M",85
+"134","65-74 years","5","Midwest","F",0
+"135","65-74 years","5","Midwest","M",5
+"136","65-74 years","5","Northeast","F",1
+"137","65-74 years","5","Northeast","M",3
+"138","65-74 years","5","South","F",-3
+"139","65-74 years","5","South","M",1
+"140","65-74 years","5","West","F",-2
+"141","65-74 years","5","West","M",67
+"142","75-84 years","0","Midwest","F",19
+"143","75-84 years","0","Midwest","M",285
+"144","75-84 years","0","Northeast","F",7
+"145","75-84 years","0","Northeast","M",26
+"146","75-84 years","0","South","F",30
+"147","75-84 years","0","South","M",254
+"148","75-84 years","0","West","F",40
+"149","75-84 years","0","West","M",122
+"150","75-84 years","1","Midwest","F",34
+"151","75-84 years","1","Midwest","M",1627
+"152","75-84 years","1","Northeast","F",1
+"153","75-84 years","1","Northeast","M",914
+"154","75-84 years","1","South","F",16
+"155","75-84 years","1","South","M",2600
+"156","75-84 years","1","West","F",3
+"157","75-84 years","1","West","M",806
+"158","75-84 years","2","Midwest","F",1
+"159","75-84 years","2","Midwest","M",212
+"160","75-84 years","2","Northeast","F",3
+"161","75-84 years","2","Northeast","M",246
+"162","75-84 years","2","South","F",1
+"163","75-84 years","2","South","M",519
+"164","75-84 years","2","West","F",-6
+"165","75-84 years","2","West","M",68
+"166","75-84 years","3","Midwest","F",-1
+"167","75-84 years","3","Midwest","M",28
+"168","75-84 years","3","Northeast","F",0
+"169","75-84 years","3","Northeast","M",38
+"170","75-84 years","3","South","F",3
+"171","75-84 years","3","South","M",160
+"172","75-84 years","3","West","F",2
+"173","75-84 years","3","West","M",113
+"174","75-84 years","4","Midwest","F",0
+"175","75-84 years","4","Midwest","M",32
+"176","75-84 years","4","Northeast","M",10
+"177","75-84 years","4","South","F",0
+"178","75-84 years","4","South","M",32
+"179","75-84 years","4","West","F",-1
+"180","75-84 years","4","West","M",43
+"181","75-84 years","5","Midwest","F",2
+"182","75-84 years","5","Midwest","M",24
+"183","75-84 years","5","Northeast","M",7
+"184","75-84 years","5","South","F",-3
+"185","75-84 years","5","South","M",20
+"186","75-84 years","5","West","F",-2
+"187","75-84 years","5","West","M",97
+"188","85 years and older","0","Midwest","F",28
+"189","85 years and older","0","Midwest","M",251
+"190","85 years and older","0","Northeast","F",22
+"191","85 years and older","0","Northeast","M",42
+"192","85 years and older","0","South","F",67
+"193","85 years and older","0","South","M",279
+"194","85 years and older","0","West","F",21
+"195","85 years and older","0","West","M",60
+"196","85 years and older","1","Midwest","F",6
+"197","85 years and older","1","Midwest","M",3266
+"198","85 years and older","1","Northeast","F",58
+"199","85 years and older","1","Northeast","M",2558
+"200","85 years and older","1","South","F",6
+"201","85 years and older","1","South","M",2727
+"202","85 years and older","1","West","F",1
+"203","85 years and older","1","West","M",948
+"204","85 years and older","2","Midwest","F",1
+"205","85 years and older","2","Midwest","M",244
+"206","85 years and older","2","Northeast","F",4
+"207","85 years and older","2","Northeast","M",180
+"208","85 years and older","2","South","F",14
+"209","85 years and older","2","South","M",588
+"210","85 years and older","2","West","F",4
+"211","85 years and older","2","West","M",99
+"212","85 years and older","3","Midwest","M",44
+"213","85 years and older","3","Northeast","F",1
+"214","85 years and older","3","Northeast","M",60
+"215","85 years and older","3","South","F",2
+"216","85 years and older","3","South","M",187
+"217","85 years and older","3","West","F",3
+"218","85 years and older","3","West","M",199
+"219","85 years and older","4","Midwest","F",-3
+"220","85 years and older","4","Midwest","M",39
+"221","85 years and older","4","Northeast","M",22
+"222","85 years and older","4","South","F",-3
+"223","85 years and older","4","South","M",28
+"224","85 years and older","4","West","F",3
+"225","85 years and older","4","West","M",33
+"226","85 years and older","5","Midwest","F",-2
+"227","85 years and older","5","Midwest","M",26
+"228","85 years and older","5","Northeast","F",1
+"229","85 years and older","5","Northeast","M",49
+"230","85 years and older","5","South","F",-1
+"231","85 years and older","5","South","M",47
+"232","85 years and older","5","West","F",4
+"233","85 years and older","5","West","M",102

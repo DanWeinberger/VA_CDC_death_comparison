@@ -234,6 +234,14 @@ results$preds.overall$obs_std_inc
 
 ```
 
+Number of deaths
+```{r}
+htmlTable(results$preds.age.overall %>%
+  select(agec,  excess_median) %>%
+  mutate(excess_median=round(excess_median)))
+```
+
+
 
 
 
