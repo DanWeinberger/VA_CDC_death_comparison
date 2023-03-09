@@ -178,6 +178,8 @@ The key for ORIGIN is as follows:
 
 Fit to VA and CDC data separately. This function saves to an rds file summary tables with the excess incidence and RR by group (excluding raw counts and denominators). It also outputs the full summary tables that can be used in plotting in the list out.ds
 ```{r}
+std.pop.VA.age.region.sex.race <- readRDS('./Data/std.pop.VAenrollees.age.region.sex.race.rds')
+
 out.ds <- call_inla(label='va', ds=v1)
 
 ```

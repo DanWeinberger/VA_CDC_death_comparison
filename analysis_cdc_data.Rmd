@@ -392,7 +392,7 @@ men
 
 Overall by race, age
 
-```{r, fig.width=8}
+```{r, fig.width=6}
 aggr_summary <- detailed_summary %>%
   group_by(agec,race_recode, date) %>%
     mutate(race_recode=factor(race_recode, c('1','2','3','4','5'), c('White','Black' ,'Hispanic','Amer.Indian','Asian/PacifIs'))) %>%
