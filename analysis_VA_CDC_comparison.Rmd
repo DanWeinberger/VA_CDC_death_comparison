@@ -249,7 +249,7 @@ t2.va.full<- t1 +
   facet_wrap(~agec, scales='free', nrow=1)+
     theme(legend.position="none")+
   ylab('Deaths/100000')+
-  ggtitle('VA enrollees')
+  ggtitle('VA enrollees') +
 t2.va.full
 
 ```
@@ -263,11 +263,15 @@ Set same axes for both
 ```{r, fig.width=8, fig.height=4}
 blank_data <- data.frame(agec = c('25-44 years', '45-64 years', '65-74 years', '75-84 years', '85 years and older'),x=as.Date('2014-01-01'), y= c(75,500,1000,2000, 6000))
 
-t3.cdc <- t2.cdc + geom_blank(data = blank_data, aes(x = x, y = y))
+t3.cdc <- t2.cdc + geom_blank(data = blank_data, aes(x = x, y = y)) +
+  theme(panel.spacing = unit(0.75, "lines"))
 
-t3.va.full <- t2.va.full + geom_blank(data = blank_data, aes(x = x, y = y)) 
 
-q2 <- grid.arrange(t3.cdc, t3.va.full)
+t3.va.full <- t2.va.full + geom_blank(data = blank_data, aes(x = x, y = y)) +
+  theme(panel.spacing = unit(0.75, "lines"))
+
+q2 <- grid.arrange(t3.cdc, t3.va.full, padding = unit(0.25, "line"))
+q2
 
 ggsave('Figure 1.tiff',plot=q2, path = './plots', width = 9, height = 4, device='tiff', dpi=300)
 
@@ -375,7 +379,7 @@ preds.age <- bind_rows(cdc$preds.age, va.full$preds.age, va.users.cr$preds.age)
 
 By region and age
 
-```{r, fig.width=8, fig.height=6}
+```{r, fig.width=6, fig.height=4}
 
 va.users.cr$preds.age.race.region$source <- 'va.users'
 va.full$preds.age.race.region$source <- 'va.full'
@@ -383,7 +387,9 @@ va.full$preds.age.race.region$source <- 'va.full'
 preds.age.race.region <- bind_rows(cdc$preds.age.race.region, va.users.cr$preds.age.race.region,va.full$preds.age.race.region)
 
  p2 <- RR_plot(ds=preds.age.race.region[preds.age.race.region$race_recode==1 & preds.age.race.region$sex=='M',] ,datemin='2020-01-01',add.CIs=F) + 
-    facet_grid(region~agec, scales='fixed')
+    facet_grid(region~agec, scales='fixed') +
+     geom_hline(yintercept = 1, lty=2, col='gray')
+
  
  p2
 # ggsave('Fig S1 rr_region_age.jpg',path = './plots', width = 8, height =6, device='jpg', dpi=400)
@@ -396,20 +402,32 @@ preds.age.race.region <- bind_rows(cdc$preds.age.race.region, va.users.cr$preds.
  plot.ds$labels[plot.ds$source=='va.full'] <- 'VA enrollees'
  plot.ds$labels[plot.ds$source=='va.users'] <- 'VA active users'
  
- 
- p.rr_region <- ggplot(plot.ds, aes(x=qdate , y=RR_std_median, group=labels, col=labels ,linetype=labels)) +
+ plot.ds <- plot.ds %>%
+   mutate(year=year(qdate),
+          qtr=quarter(qdate),
+          qdate_cat = as.factor(paste0(year, ' Q', qtr)),
+          agec = if_else(agec=='85 years and older',' 85+ years',agec)) 
+   
+ p.rr_region <-ggplot( data=plot.ds, aes(x=qdate_cat , y=RR_std_median, group=labels, col=labels ,linetype=labels)) +
          geom_line(alpha=0.5) +
-          geom_point(data=plot.ds ,aes(x=qdate , y=RR_std_median,group=labels, shape=labels))+
+          geom_point(data=plot.ds ,aes(x=qdate_cat , y=RR_std_median,group=labels, shape=labels))+
          theme_classic() +
-  facet_grid(region~agec, scales='fixed') +
-  scale_y_continuous(name='Rate ratio') +
-  scale_x_yearqtr(format = '%Y Q%q', n=4) +
-  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+  facet_grid(region~agec, scales='free_x') +
+  scale_y_continuous(name='Risk ratio') +
+  #scale_x_yearqtr(format = '%Y Q%q', n=4) +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+     geom_hline(yintercept = 1, lty=2, col='gray') +
+   xlab('') +
+   ylab('Risk ratio')+ 
+   theme(legend.title=element_blank())
+ 
  ggsave('Fig S1 rr_region_age.jpg',plot=p.rr_region,path = './plots', width = 8, height =6, device='jpg', dpi=400)
+ 
+ p.rr_region
 
 ```
 
-Overall rate ratio (observed/expected) in the CDC, VA full and VA users
+Overall risk ratio (observed/expected) in the CDC, VA full and VA users
 ```{r}
 test.list <- list(cdc, va.full, va.users.cr, va.users.lr)
 
@@ -524,8 +542,9 @@ std.pop.age.region.sex.race <- readRDS('./Data/std.pop.age.region.sex.race.rds')
 std.pop.va <- va.full$preds.age.race.region %>%
   group_by(agec, sex, race_recode, region) %>%
   summarize(std.pop.va=mean(pop)) %>% 
-  ungroup %>%
-  mutate( std.pop.va= std.pop.va/sum(std.pop.va)*100000) %>%
+  ungroup() %>%
+  mutate( tot_pop= sum(std.pop.va),
+                       std.pop.va= std.pop.va/tot_pop) %>%
   filter(race_recode !='0')
 
 saveRDS(std.pop.va,'./Data/std.pop.VAenrollees.age.region.sex.race.rds')
@@ -590,17 +609,23 @@ all.std.rrs.plot$variable <- factor(all.std.rrs.plot$variable, c('Raw_RR','Std_R
 all.std.rrs.plot$qdate <- as.yearqtr(all.std.rrs.plot$date)
 
 all.std.rrs.plot <- all.std.rrs.plot %>%
-filter(!is.na(date))
+filter(!is.na(date)) %>%
+   mutate(year=year(qdate),
+          qtr=quarter(qdate),
+          qdate_cat = as.factor(paste0(year, ' Q', qtr)),
+          variable = if_else(variable=='Raw_RR', 'a. Unadjusted RR', 'b. Standardized RR')) 
 
-p.rr <- ggplot(all.std.rrs.plot, aes(x=qdate , y=value, group=label, col=label ,linetype=label)) +
+p.rr <- ggplot(all.std.rrs.plot, aes(x=qdate_cat , y=value, group=label, col=label ,linetype=label)) +
          geom_line(alpha=0.5) +
-          geom_point(data=all.std.rrs.plot ,aes(x=qdate , y=value,group=label, shape=label))+
+          geom_point(data=all.std.rrs.plot ,aes(x=qdate_cat , y=value,group=label, shape=label))+
          theme_classic() +
   facet_wrap(vars(variable)) +
-  scale_y_continuous(name='Rate ratio') +
-  ggtitle('Raw and standarized Rate Ratios') +
-  scale_x_yearqtr(format = '%Y Q%q', n=4) +
-  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+  scale_y_continuous(name='Risk ratio') +
+  ggtitle('Raw and standarized Risk Ratios') +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+  xlab('') +
+  geom_hline(yintercept = 1, lty=2, col='gray') + 
+  theme(legend.title=element_blank())
 
 p.rr
 ggsave('Figure 2 rr_plot.tiff',path = './plots', width = 6, height = 3, device='tiff', dpi=400)
@@ -714,7 +739,7 @@ ggplot(comp1.rr1.c, aes(x=log(cdc_excess_inc_median), y=log(va.full_excess_inc_m
 
 
 Plot observed vs expected using standardized incidence--using the observed data, this should give plot same as above
-```{r, fig.width=6, fig.height=4}
+```{r, fig.width=6, fig.height=3}
 b1 <- bind_rows(a2)
 b1 <- merge(b1, std.pop.va, by=c('agec','race_recode','sex','region'), all=T)
 
@@ -800,6 +825,7 @@ guides(shape = 'none')+ #To turn off shape legend
   xlab("")+
    scale_color_manual(labels = c("US", "VA enrollees", "VA active users (CR)","VA active users (LR)"), values=c("#000000", "#E69F00", "#56B4E9", "#009E73"))+
   ggtitle('Observed and expected incidence, standardized population')
+
 p2
 ggsave('obs_expected_age.jpg',path = './plots', width = 6, height = 4, device='jpeg', dpi=400)
 
@@ -836,13 +862,13 @@ check work here with data from the Monte Carlo resampled approach
 round(c(cdc$preds.overall$RR_median, cdc$preds.overall$RR_lcl, cdc$preds.overall$RR_ucl),2)
 round(c(va.full$preds.overall$RR_median, va.full$preds.overall$RR_lcl, va.full$preds.overall$RR_ucl),2)
 
+round(c(va.users.cr$preds.overall$RR_median, va.users.cr$preds.overall$RR_lcl, va.users.cr$preds.overall$RR_ucl),2)
+
 ```
 
 
 ##Summary by sex
 ```{r}
-
-
 cdc$preds.sex %>%
   filter(date>='2020-01-01')
 
@@ -876,9 +902,11 @@ ggplot(cdc$preds.age.sex.overall, aes(x=agec, y=RR_std_median, group=sex, col=se
   geom_point(data=va.users.cr$preds.age.sex.overall, aes(x=agec, y=RR_std_median, group=sex, col=sex), shape=1) + 
   theme_classic()
 ```
+
+
 ## Figure 3
 Observed vs expected by age  
-```{r, fig.width=8, fig.height=4}
+```{r, fig.width=5, fig.height=3.5}
 
 b1.age <- b1
 
@@ -919,7 +947,7 @@ c2.m.age$agec2[c2.m.age$agec=="85 years and older"] <- 5
 age.labs1 <- c("25-44 years","45-64 years" ,"65-74 years","75-84 years","85 years and older")
 
 
-c2.m.age$agec2[c2.m.age$variable=='exp.std.N'] <- c2.m.age$agec2[c2.m.age$variable=='exp.std.N'] - 0.1
+c2.m.age$agec2[c2.m.age$variable=='exp.std.N'] <- c2.m.age$agec2[c2.m.age$variable=='obs.std.N'] - 0.2
 
 c2.m.age$pair1 <- as.numeric(as.factor(paste(c2.m.age$agec, c2.m.age$source)))
 c2.m.age$agec <- as.factor(c2.m.age$agec)
@@ -948,7 +976,7 @@ ggsave('Figure 3 obs_exp_age.tiff',plot=p2,path = './plots', width = 8, height =
 ## Figure S2
 
 Observed vs expected by age and sex 
-```{r, fig.width=8, fig.height=4}
+```{r, fig.width=6.5, fig.height=3.5}
 
 b1.sex <- b1
 
@@ -986,13 +1014,14 @@ c2.m.sex$agec2[c2.m.sex$agec=="65-74 years"] <- 3
 c2.m.sex$agec2[c2.m.sex$agec=="75-84 years"] <- 4
 c2.m.sex$agec2[c2.m.sex$agec=="85 years and older"] <- 5
 
-age.labs1 <- c("25-44 years","45-64 years" ,"65-74 years","75-84 years","85 years and older")
+c2.m.sex$agec[c2.m.sex$agec=="85 years and older"] <- "85+ years"
+age.labs1 <- c("25-44 years","45-64 years" ,"65-74 years","75-84 years","85+ years")
 
 c2.m.sex$sex2 <- 1
 c2.m.sex$sex2[c2.m.sex$sex=='F'] <- 2
-c2.m.sex$sex2[c2.m.sex$variable=='exp.std.N'] <- c2.m.sex$sex2[c2.m.sex$variable=='exp.std.N'] - 0.1
+c2.m.sex$sex2[c2.m.sex$variable=='exp.std.N'] <- c2.m.sex$sex2[c2.m.sex$variable=='exp.std.N'] - 0.2
 
-c2.m.sex$agec2[c2.m.sex$variable=='exp.std.N'] <- c2.m.sex$agec2[c2.m.sex$variable=='exp.std.N'] - 0.1
+c2.m.sex$agec2[c2.m.sex$variable=='exp.std.N'] <- c2.m.sex$agec2[c2.m.sex$variable=='exp.std.N'] - 0.2
 
 c2.m.sex$pair1 <- as.numeric(as.factor(paste(c2.m.sex$sex, c2.m.sex$source)))
 c2.m.sex$agec <- as.factor(c2.m.sex$agec)
@@ -1028,7 +1057,7 @@ Observed vs expected by age and race/ethnicity
  3=Hispanic
  4=American Indian
  5=Asian/Hawaiian/Pacific Islanders
-```{r, fig.width=8, fig.height=5}
+```{r, fig.width=5, fig.height=4}
 
 b1.race_recode <- b1
 
@@ -1060,9 +1089,9 @@ c2.m.race_recode$source <- factor(c2.m.race_recode$source, c('cdc','va.full','va
 
 
 c2.m.race_recode$race_recode2 <- as.numeric(c2.m.race_recode$race_recode)
-c2.m.race_recode$race_recode2[c2.m.race_recode$variable=='exp.std.N'] <- c2.m.race_recode$race_recode2[c2.m.race_recode$variable=='exp.std.N'] - 0.1
+c2.m.race_recode$race_recode2[c2.m.race_recode$variable=='exp.std.N'] <- c2.m.race_recode$race_recode2[c2.m.race_recode$variable=='exp.std.N'] - 0.2
 
-c2.m.race_recode$agec2[c2.m.race_recode$variable=='exp.std.N'] <- c2.m.race_recode$agec2[c2.m.race_recode$variable=='exp.std.N'] - 0.1
+c2.m.race_recode$agec2[c2.m.race_recode$variable=='exp.std.N'] <- c2.m.race_recode$agec2[c2.m.race_recode$variable=='exp.std.N'] - 0.2
 
 c2.m.race_recode$pair1 <- as.numeric(as.factor(paste(c2.m.race_recode$race_recode, c2.m.race_recode$source)))
 race_recode.labs1 <- c('White', 'Black', 'Hispanic', 'American Indian','Asian/Hawaiian/Pac Is.' )
