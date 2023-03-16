@@ -94,6 +94,154 @@ va.users.lr <- readRDS('./outputs/confidential/outputs_users_LR_definition/summa
 
 ```
 
+## Figure S4
+
+```{r, fig.width=5.5, fig.height=5}
+race_recode.labs1 <- c('White', 'Black', 'Hispanic', 'American Indian','Asian/Hawaiian/Pac Is.' )
+
+plot.ds <- cdc$preds.age_race %>%
+  filter(date>='2020-01-01' & race_recode %in% c('1','2','3')) %>%
+  mutate(race_recode=as.numeric(as.character(race_recode)),
+         race_recode = factor(race_recode, levels=c(1:5), labels=race_recode.labs1),
+         qtr = quarter(date),
+         agec = if_else(agec=='85 years and older','85+y', agec),
+         year=year(date),
+         qdate = as.factor(paste0('Q',qtr))
+         ) %>%
+  rename(RaceEthnicity=race_recode)
+
+plot1.cdc <-  ggplot(plot.ds,aes(x=qdate, y=RR_std_median, group=RaceEthnicity, color=RaceEthnicity)) +
+  geom_line()+
+  ylim(0.75,2.0)+
+  geom_ribbon(data=plot.ds, aes(x=qdate, ymin=RR_std_lcl, ymax=RR_std_ucl, fill=RaceEthnicity), alpha=0.5) +
+    facet_wrap(~agec, nrow=1) +
+  theme_classic() +
+  geom_hline(yintercept=1, lty=2, col='gray') +
+    geom_hline(yintercept=c(1.2,1.4,1.6,1.8), lty=3, col='gray', alpha=0.75) +
+
+  ylab('Risk Ratio')+
+  xlab('')
+
+#plot1.cdc
+
+plot.ds.enrollee <- va.full$preds.age_race %>%
+  filter(date>='2020-01-01' & race_recode %in% c('1','2','3')) %>%
+  mutate(race_recode=as.numeric(as.character(race_recode)),
+         race_recode = factor(race_recode, levels=c(1:5), labels=race_recode.labs1),
+         qtr = quarter(date),
+         agec = if_else(agec=='85 years and older','85+y', agec),
+         year=year(date),
+         qdate = as.factor(paste0('Q',qtr))
+         ) %>%
+  rename(RaceEthnicity=race_recode)
+
+plot1.enrollee <-  ggplot(plot.ds.enrollee,aes(x=qdate, y=RR_std_median, group=RaceEthnicity, color=RaceEthnicity)) +
+  geom_line()+
+  ylim(0.75,2.0)+
+  geom_ribbon(data=plot.ds.enrollee, aes(x=qdate, ymin=RR_std_lcl, ymax=RR_std_ucl, fill=RaceEthnicity), alpha=0.5) +
+    facet_wrap(~agec, nrow=1) +
+  theme_classic() +
+  geom_hline(yintercept=1, lty=2, col='gray') +
+  ylab('Risk Ratio')+
+    geom_hline(yintercept=c(1.2,1.4,1.6,1.8), lty=3, col='gray', alpha=0.75) +
+
+  xlab('')
+
+#plot1.cdc
+
+
+plot.ds <- va.users.cr$preds.age_race %>%
+  filter(date>='2020-01-01' & race_recode %in% c('1','2','3')) %>%
+  mutate(race_recode=as.numeric(as.character(race_recode)),
+         race_recode = factor(race_recode, levels=c(1:5), labels=race_recode.labs1),
+         qtr = quarter(date),
+         agec = if_else(agec=='85 years and older','85+y', agec),
+         year=year(date),
+         qdate = as.factor(paste0('Q',qtr))
+         ) %>%
+  rename(RaceEthnicity=race_recode)
+
+plot2.va.users <-  ggplot(plot.ds,aes(x=qdate, y=RR_std_median, group=RaceEthnicity, color=RaceEthnicity)) +
+  geom_line()+
+  ylim(0.75,2.0)+
+  geom_ribbon(data=plot.ds, aes(x=qdate, ymin=RR_std_lcl, ymax=RR_std_ucl, fill=RaceEthnicity), alpha=0.5) +
+    facet_wrap(~agec, nrow=1) +
+  theme_classic() +
+  geom_hline(yintercept=1, lty=2, col='gray') +
+  geom_hline(yintercept=c(1.2,1.4,1.6,1.8), lty=3, col='gray', alpha=0.75) +
+  ylab('Risk Ratio')+
+  xlab('')
+#plot2.va.users
+
+plot1.cdc/plot1.enrollee/plot2.va.users + plot_annotation(tag_levels = 'A')
+```
+
+
+```{r, fig.width=2.5, fig.height=4}
+race_recode.labs1 <- c('White', 'Black', 'Hispanic', 'American Indian','Asian/Hawaiian/Pac Is.' )
+
+plot.ds <- cdc$preds.sex %>%
+  filter(date>='2020-01-01') %>%
+  mutate(
+         qtr = quarter(date),
+         year=year(date),
+         qdate = as.factor(paste0('Q',qtr))
+         )
+
+plot1.cdc <-  ggplot(plot.ds,aes(x=qdate, y=RR_std_median, group=sex, color=sex)) +
+  geom_line()+
+  ylim(0.75,2.0)+
+  geom_ribbon(data=plot.ds, aes(x=qdate, ymin=RR_std_lcl, ymax=RR_std_ucl, fill=sex), alpha=0.5) +
+  theme_classic() +
+  geom_hline(yintercept=1, lty=2, col='gray') +
+  ylab('Risk Ratio')+
+    geom_hline(yintercept=c(1.2,1.4,1.6,1.8), lty=3, col='gray', alpha=0.75) +
+
+  xlab('')
+
+#plot1.cdc
+
+plot.ds.enrollee <- va.full$preds.sex %>%
+  filter(date>='2020-01-01') %>%
+  mutate(
+         qtr = quarter(date),
+         year=year(date),
+         qdate = as.factor(paste0('Q',qtr))
+         )
+
+plot2.va.enrollees <-  ggplot(plot.ds.enrollee,aes(x=qdate, y=RR_std_median, group=sex, color=sex)) +
+  geom_line()+
+  ylim(0.75,2.05)+
+  geom_ribbon(data=plot.ds.enrollee, aes(x=qdate, ymin=RR_std_lcl, ymax=RR_std_ucl, fill=sex), alpha=0.5) +
+  theme_classic() +
+  geom_hline(yintercept=1, lty=2, col='gray') +
+  ylab('Risk Ratio')+
+    geom_hline(yintercept=c(1.2,1.4,1.6,1.8), lty=3, col='gray', alpha=0.75) +
+  xlab('')
+
+
+plot.ds.users <- va.users.cr$preds.sex %>%
+  filter(date>='2020-01-01') %>%
+  mutate(
+         qtr = quarter(date),
+         year=year(date),
+         qdate = as.factor(paste0('Q',qtr))
+         )
+
+plot2.va.users <-  ggplot(plot.ds.users,aes(x=qdate, y=RR_std_median, group=sex, color=sex)) +
+  geom_line()+
+  ylim(0.75,2.0)+
+  geom_ribbon(data=plot.ds.users, aes(x=qdate, ymin=RR_std_lcl, ymax=RR_std_ucl, fill=sex), alpha=0.5) +
+  theme_classic() +
+  geom_hline(yintercept=1, lty=2, col='gray') +
+  ylab('Risk Ratio')+
+    geom_hline(yintercept=c(1.2,1.4,1.6,1.8), lty=3, col='gray', alpha=0.75) +
+  xlab('')
+#plot2.va.users
+
+plot1.cdc/plot2.va.enrollees/plot2.va.users + plot_annotation(tag_levels = 'A')
+```
+
 Number of deaths, CR definition
 ```{r}
 htmlTable(va.users.cr$preds.age.overall %>%
