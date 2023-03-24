@@ -397,7 +397,7 @@ t2.va.full<- t1 +
   facet_wrap(~agec, scales='free', nrow=1)+
     theme(legend.position="none")+
   ylab('Deaths/100000')+
-  ggtitle('VA enrollees') +
+  ggtitle('VA enrollees') 
 t2.va.full
 
 ```
@@ -569,7 +569,7 @@ preds.age.race.region <- bind_rows(cdc$preds.age.race.region, va.users.cr$preds.
    ylab('Risk ratio')+ 
    theme(legend.title=element_blank())
  
- ggsave('Fig S1 rr_region_age.jpg',plot=p.rr_region,path = './plots', width = 8, height =6, device='jpg', dpi=400)
+ ggsave('Fig S2 rr_region_age.jpg',plot=p.rr_region,path = './plots', width = 8, height =6, device='jpg', dpi=400)
  
  p.rr_region
 
@@ -769,14 +769,17 @@ p.rr <- ggplot(all.std.rrs.plot, aes(x=qdate_cat , y=value, group=label, col=lab
          theme_classic() +
   facet_wrap(vars(variable)) +
   scale_y_continuous(name='Risk ratio') +
-  ggtitle('Raw and standarized Risk Ratios') +
+  #ggtitle('Raw and standarized Risk Ratios') +
   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
   xlab('') +
   geom_hline(yintercept = 1, lty=2, col='gray') + 
   theme(legend.title=element_blank())
 
 p.rr
-ggsave('Figure 2 rr_plot.tiff',path = './plots', width = 6, height = 3, device='tiff', dpi=400)
+# ggsave('Figure 2 rr_plot.tiff',path = './plots', width = 6, height = 3, device='tiff', dpi=400)
+
+ggsave('Figure 1 rr_plot.pdf',path = './plots', width = 6, height = 3, device='pdf', dpi=400)
+
 
 ```
 
@@ -1114,10 +1117,10 @@ guides(shape = 'none')+ #To turn off shape legend
   xlab("")+
   theme(axis.text.x = element_text(angle = 45, vjust = 0.7, hjust=1))+
    scale_color_manual(labels = c("US", "VA enrollees", "VA active users","VA active users (LR)"), values=c("#000000", "#E69F00", "#56B4E9", "#009E73"))+
-  ggtitle('Observed and expected incidence, standardized population') +
+  #ggtitle('Observed and expected incidence, standardized population') +
  theme(panel.spacing.x = unit(2, "lines"),panel.spacing.y= unit(4, "lines"))
 p2
-ggsave('Figure 3 obs_exp_age.tiff',plot=p2,path = './plots', width = 8, height = 4.2, device='tiff', dpi=300)
+ggsave('Figure 2 obs_exp_age.pdf',plot=p2,path = './plots', width = 8, height = 4.2, device='pdf', dpi=300)
 
 ```
 
